@@ -1,0 +1,3 @@
+[submodule "QUIN/vendor/spdlog"]
+	path = QUIN/vendor/spdlog
+	url = https://github.com/gabime/spdlog
