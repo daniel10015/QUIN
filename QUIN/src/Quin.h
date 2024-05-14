@@ -4,6 +4,7 @@
 // --- for application use only
 // ----------------------------
 #include "Quin/Application.h"
+#include "Quin/Log.h"
 
 // ------- ENTRY POINT -------
 // ---------------------------
