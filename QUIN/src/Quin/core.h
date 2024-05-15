@@ -11,3 +11,6 @@
 #else
 	#error Quin only supports windows!
 #endif
+
+// clever macro to assign bits to categories
+#define BIT(x) (1<<x)

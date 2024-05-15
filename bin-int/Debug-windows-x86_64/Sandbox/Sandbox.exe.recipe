@@ -2,10 +2,10 @@
 <Project>
   <ProjectOutputs>
     <ProjectOutput>
-      <FullPath>C:\code\PersonalProjects\QUIN\QUIN\bin\Debug-x64\QUIN\QUIN.dll</FullPath>
+      <FullPath>C:\code\PersonalProjects\QUIN\QUIN\bin\Debug-windows-x86_64\QUIN\QUIN.dll</FullPath>
     </ProjectOutput>
     <ProjectOutput>
-      <FullPath>C:\code\PersonalProjects\QUIN\QUIN\bin\Debug-x64\Sandbox\Sandbox.exe</FullPath>
+      <FullPath>C:\code\PersonalProjects\QUIN\QUIN\bin\Debug-windows-x86_64\Sandbox\Sandbox.exe</FullPath>
     </ProjectOutput>
   </ProjectOutputs>
   <ContentFiles />
