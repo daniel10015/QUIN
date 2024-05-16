@@ -6,6 +6,7 @@
 #include <functional>
 #include <algorithm>
 #include <utility>
+#include "Log.h"
 
 #include <string>
 #include <vector>

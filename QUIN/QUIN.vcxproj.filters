@@ -31,9 +31,16 @@
     <ClInclude Include="src\Quin\Log.h">
       <Filter>Quin</Filter>
     </ClInclude>
+    <ClInclude Include="src\Quin\Window.h">
+      <Filter>Quin</Filter>
+    </ClInclude>
     <ClInclude Include="src\Quin\core.h">
       <Filter>Quin</Filter>
     </ClInclude>
+    <ClInclude Include="src\Quin\qnpch.h">
+      <Filter>Quin</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Quin\Platform\Windows\WinWindow.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Quin\Application.cpp">
@@ -42,5 +49,9 @@
     <ClCompile Include="src\Quin\Log.cpp">
       <Filter>Quin</Filter>
     </ClCompile>
+    <ClCompile Include="src\Quin\qnpch.cpp">
+      <Filter>Quin</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Quin\Platform\Windows\WinWindow.cpp" />
   </ItemGroup>
 </Project>
