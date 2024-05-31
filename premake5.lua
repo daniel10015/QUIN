@@ -11,12 +11,12 @@ outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
 
 project "GLFW"
+	location "QUIN/vendor/GLFW"
 	kind "StaticLib"
 	language "C"
 
 	targetdir ("bin/" .. outputdir .. "/%{prj.name}")
 	objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
-	--location "QUIN/vendor/GLFW"
 
 	files
 	{
@@ -28,16 +28,48 @@ project "GLFW"
 		"QUIN/vendor/GLFW/src/input.c",
 		"QUIN/vendor/GLFW/src/monitor.c",
 		"QUIN/vendor/GLFW/src/vulkan.c",
+		"QUIN/vendor/GLFW/src/platform.c",
+		"QUIN/vendor/GLFW/src/null_init.c",
+		"QUIN/vendor/GLFW/src/null_monitor.c",
+		"QUIN/vendor/GLFW/src/null_window.c",
+		"QUIN/vendor/GLFW/src/null_joystick.c",
 		"QUIN/vendor/GLFW/src/window.c"
+	}
+-- "QUIN\vendor\GLFW\src\cocoa_init.m"
+-- "QUIN\vendor\GLFW\src\cocoa_joystick.h"
+-- "QUIN\vendor\GLFW\src\cocoa_joystick.m"
+-- "QUIN\vendor\GLFW\src\cocoa_monitor.m"
+-- "QUIN\vendor\GLFW\src\cocoa_platform.h"
+-- "QUIN\vendor\GLFW\src\cocoa_time.c"
+-- "QUIN\vendor\GLFW\src\cocoa_time.h"
+-- "QUIN\vendor\GLFW\src\cocoa_window.m"
+-- "QUIN\vendor\GLFW\src\context.c"
+-- "QUIN\vendor\GLFW\src\egl_context.c"
+-- "QUIN\vendor\GLFW\src\glx_context.c"
+-- "QUIN\vendor\GLFW\src\internal.h"
+-- "QUIN\vendor\GLFW\src\linux_joystick.c"
+-- "QUIN\vendor\GLFW\src\linux_joystick.h"
+-- "QUIN\vendor\GLFW\src\mappings.h"
+-- "QUIN\vendor\GLFW\src\mappings.h.in",
+-- "QUIN\vendor\GLFW\src\monitor.c"
+-- "QUIN\vendor\GLFW\src\nsgl_context.m"
+
+	libdirs { "/VulkanSDK/1.3.280.0/Lib/" }
+
+	links
+	{
+		"vulkan-1" -- will need to link vulkan later
 	}
 
 	filter "system:windows"
+		buildoptions("-std=c11", "ldgi32")
 		systemversion "latest"
 		staticruntime "On"
 
 		files
 		{
 			"QUIN/vendor/GLFW/src/win32_init.c",
+			"QUIN/vendor/GLFW/src/win32_module.c",
 			"QUIN/vendor/GLFW/src/win32_joystick.c",
 			"QUIN/vendor/GLFW/src/win32_monitor.c",
 			"QUIN/vendor/GLFW/src/win32_time.c",
@@ -51,7 +83,8 @@ project "GLFW"
 		defines 
 		{ 
 			"_GLFW_WIN32",
-			"_CRT_SECURE_NO_WARNINGS"
+			"_CRT_SECURE_NO_WARNINGS",
+			"_GLFW_VULKAN_STATIC"
 		}
 
 	filter "configurations:Debug"
@@ -80,7 +113,7 @@ project "QUIN"
 	objdir ( "bin-int/" .. outputdir .. "/%{prj.name}" )
 
 	pchheader "qnpch.h"
-	pchsource "Quin/src/qnpch.h" -- will be ignored on other build systems
+	pchsource "src/Quin/qnpch.cpp" -- will be ignored on other build systems
 
 	files
 	{
@@ -91,14 +124,18 @@ project "QUIN"
 	includedirs
 	{
 		"%{prj.name}/src",
+		"%{prj.name}/src/Quin",
 		"%{prj.name}/vendor/spdlog/include",
-		"%{prj.name}/vendor/GLFW/include"
+		"%{prj.name}/vendor/GLFW/include",
+		"/VulkanSDK/1.3.280.0/Include"
 	}
+
+	libdirs { "/VulkanSDK/1.3.280.0/Lib/" }
 
 	links
 	{
 		"GLFW",
-		-- will need to link vulkan later
+		"vulkan-1" -- will need to link vulkan later
 	}
 
 	filter "system:windows"
@@ -118,6 +155,7 @@ project "QUIN"
 		}
 
 	filter "configurations:Debug"
+		defines "QN_ENABLE_ASSERTS" -- assert only in debug mode
 		defines "QN_DEBUG"
 		symbols "On"
 

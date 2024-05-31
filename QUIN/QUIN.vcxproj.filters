@@ -7,6 +7,12 @@
     <Filter Include="Quin\Events">
       <UniqueIdentifier>{86F35C0D-F2A8-D502-7B9D-CFD9E751CC06}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Quin\Platform">
+      <UniqueIdentifier>{76F485F4-E2B4-012B-ABEF-4AA8176F4607}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Quin\Platform\Windows">
+      <UniqueIdentifier>{B0B4A37C-1C21-5F77-E514-F7D4514081DF}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Quin.h" />
@@ -31,6 +37,9 @@
     <ClInclude Include="src\Quin\Log.h">
       <Filter>Quin</Filter>
     </ClInclude>
+    <ClInclude Include="src\Quin\Platform\Windows\WinWindow.h">
+      <Filter>Quin\Platform\Windows</Filter>
+    </ClInclude>
     <ClInclude Include="src\Quin\Window.h">
       <Filter>Quin</Filter>
     </ClInclude>
@@ -40,7 +49,6 @@
     <ClInclude Include="src\Quin\qnpch.h">
       <Filter>Quin</Filter>
     </ClInclude>
-    <ClInclude Include="src\Quin\Platform\Windows\WinWindow.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Quin\Application.cpp">
@@ -49,9 +57,11 @@
     <ClCompile Include="src\Quin\Log.cpp">
       <Filter>Quin</Filter>
     </ClCompile>
+    <ClCompile Include="src\Quin\Platform\Windows\WinWindow.cpp">
+      <Filter>Quin\Platform\Windows</Filter>
+    </ClCompile>
     <ClCompile Include="src\Quin\qnpch.cpp">
       <Filter>Quin</Filter>
     </ClCompile>
-    <ClCompile Include="src\Quin\Platform\Windows\WinWindow.cpp" />
   </ItemGroup>
 </Project>

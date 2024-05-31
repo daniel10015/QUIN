@@ -21,8 +21,8 @@ namespace Quin
 	public:
 		using EventFunc = std::function<void(Event&)>;
 
-		static Window* create(const WindowProperties& wp);
-		virtual ~Window() = 0;
+		static Window* create(const WindowProperties& wp = { "Quin Engine" , 720 , 1280 } );
+		virtual ~Window() {};
 
 		virtual void OnUpdate() = 0;
 		
