@@ -21,7 +21,7 @@ namespace Quin
 		unsigned int GetWidth() const override;
 		unsigned int GetHeight() const override;
 
-		void Callback(EventFunc&) override;
+		void SetCallback(const EventCallbackFunc&) override;
 		void SetVSync() override;
 		bool IsVSync() const override;
 
@@ -32,7 +32,7 @@ namespace Quin
 			WindowProperties wp;
 			bool vsync;
 
-			EventFunc ef;
+			EventCallbackFunc ef;
 		};
 		WindowData m_windowData;
 	};

@@ -11,7 +11,7 @@ namespace Quin
 	{
 	public:
 		WindowResizedEvent(float width, float height)
-			: m_width(x), m_height(y) {}
+			: m_width(width), m_height(height) {}
 		inline float GetHeight() { return m_width; }
 		inline float GetWidth() { return m_height; }
 

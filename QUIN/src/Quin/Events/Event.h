@@ -74,7 +74,7 @@ namespace Quin
 		{
 			if (T::StaticGetEventType() == m_event.GetEventType())
 			{
-				m_event.handled = func( *(T*)&m_event ); // cast from base to subclass 
+				m_event.handled = func( *(T*)&m_event ); // cast from base to subclass, no overhead 
 				return true;
 			}
 			else

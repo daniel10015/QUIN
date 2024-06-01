@@ -48,7 +48,7 @@ namespace Quin {
 	{
 	public:
 		
-		inline int GetButton() { return m_button; }
+		inline const int GetButton() const { return m_button; }
 		CLASS_CATEGORY_EVENT(EventCategoryMouse | EventCategoryInput)
 	protected:
 		MouseButtonEvent(int butt) : m_button(butt){}
