@@ -84,6 +84,7 @@
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <AdditionalOptions>/MDd %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
@@ -111,6 +112,7 @@
       <MinimalRebuild>false</MinimalRebuild>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <AdditionalOptions>/MD %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
@@ -139,6 +141,7 @@
       <MinimalRebuild>false</MinimalRebuild>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <AdditionalOptions>/MD %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
@@ -162,6 +165,8 @@
     <ClInclude Include="src\Quin\Events\Event.h" />
     <ClInclude Include="src\Quin\Events\KeyboardEvent.h" />
     <ClInclude Include="src\Quin\Events\MouseEvent.h" />
+    <ClInclude Include="src\Quin\Layer.h" />
+    <ClInclude Include="src\Quin\LayerStack.h" />
     <ClInclude Include="src\Quin\Log.h" />
     <ClInclude Include="src\Quin\Platform\Windows\WinWindow.h" />
     <ClInclude Include="src\Quin\Window.h" />
@@ -170,6 +175,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Quin\Application.cpp" />
+    <ClCompile Include="src\Quin\Layer.cpp" />
+    <ClCompile Include="src\Quin\LayerStack.cpp" />
     <ClCompile Include="src\Quin\Log.cpp" />
     <ClCompile Include="src\Quin\Platform\Windows\WinWindow.cpp" />
     <ClCompile Include="src\Quin\qnpch.cpp">
