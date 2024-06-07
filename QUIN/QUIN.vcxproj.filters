@@ -4,6 +4,9 @@
     <Filter Include="Quin">
       <UniqueIdentifier>{E2798B7C-CEB0-8C0D-779D-721063B3080F}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Quin\2D Renderer">
+      <UniqueIdentifier>{BE194861-AA12-67B3-D344-4C38BF9C46BF}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Quin\Events">
       <UniqueIdentifier>{86F35C0D-F2A8-D502-7B9D-CFD9E751CC06}</UniqueIdentifier>
     </Filter>
@@ -16,6 +19,15 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Quin.h" />
+    <ClInclude Include="src\Quin\2D Renderer\Camera.h">
+      <Filter>Quin\2D Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Quin\2D Renderer\Renderer2D.h">
+      <Filter>Quin\2D Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Quin\2D Renderer\Scene2D.h">
+      <Filter>Quin\2D Renderer</Filter>
+    </ClInclude>
     <ClInclude Include="src\Quin\Application.h">
       <Filter>Quin</Filter>
     </ClInclude>
@@ -34,6 +46,12 @@
     <ClInclude Include="src\Quin\Events\MouseEvent.h">
       <Filter>Quin\Events</Filter>
     </ClInclude>
+    <ClInclude Include="src\Quin\Layer.h">
+      <Filter>Quin</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Quin\LayerStack.h">
+      <Filter>Quin</Filter>
+    </ClInclude>
     <ClInclude Include="src\Quin\Log.h">
       <Filter>Quin</Filter>
     </ClInclude>
@@ -51,7 +69,22 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\Quin\2D Renderer\Camera.cpp">
+      <Filter>Quin\2D Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Quin\2D Renderer\Renderer2D.cpp">
+      <Filter>Quin\2D Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Quin\2D Renderer\Scene2D.cpp">
+      <Filter>Quin\2D Renderer</Filter>
+    </ClCompile>
     <ClCompile Include="src\Quin\Application.cpp">
+      <Filter>Quin</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Quin\Layer.cpp">
+      <Filter>Quin</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Quin\LayerStack.cpp">
       <Filter>Quin</Filter>
     </ClCompile>
     <ClCompile Include="src\Quin\Log.cpp">

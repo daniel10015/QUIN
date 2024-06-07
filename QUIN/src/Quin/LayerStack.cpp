@@ -16,7 +16,9 @@ namespace Quin
 
 	void LayerStack::PushLayer(Layer* layer)
 	{
-		m_layer_insert = m_layers.emplace(m_layer_insert, layer); // returns iterator to next element
+
+		m_layers.emplace(m_layers.begin() + m_layer_insert, layer); // returns iterator to next element
+		m_layer_insert++;
 	}
 	Layer* LayerStack::PopLayer(Layer* layer)
 	{

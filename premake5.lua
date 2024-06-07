@@ -186,7 +186,8 @@ project "Sandbox"
 	includedirs
 	{
 		"QUIN/vendor/spdlog/include",
-		"QUIN/src"
+		"QUIN/src",
+		"/VulkanSDK/1.3.280.0/Include"
 	}
 
 	links
@@ -206,12 +207,15 @@ project "Sandbox"
 
 	filter "configurations:Debug"
 		defines "QN_DEBUG"
+		buildoptions "/MDd"
 		symbols "On"
 
 	filter "configurations:Release"
 		defines "QN_RELEASE"
+		buildoptions "/MD"
 		optimize "On"
 
 	filter "configurations:Dist"
 		defines "QN_DIST"
+		buildoptions "/MD"
 		optimize "On"

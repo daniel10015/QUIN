@@ -159,6 +159,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="src\Quin.h" />
+    <ClInclude Include="src\Quin\2D Renderer\Camera.h" />
+    <ClInclude Include="src\Quin\2D Renderer\Renderer2D.h" />
+    <ClInclude Include="src\Quin\2D Renderer\Scene2D.h" />
     <ClInclude Include="src\Quin\Application.h" />
     <ClInclude Include="src\Quin\EntryPoint.h" />
     <ClInclude Include="src\Quin\Events\ApplicationEvent.h" />
@@ -174,6 +177,9 @@
     <ClInclude Include="src\Quin\qnpch.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\Quin\2D Renderer\Camera.cpp" />
+    <ClCompile Include="src\Quin\2D Renderer\Renderer2D.cpp" />
+    <ClCompile Include="src\Quin\2D Renderer\Scene2D.cpp" />
     <ClCompile Include="src\Quin\Application.cpp" />
     <ClCompile Include="src\Quin\Layer.cpp" />
     <ClCompile Include="src\Quin\LayerStack.cpp" />

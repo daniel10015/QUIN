@@ -15,6 +15,9 @@ namespace Quin
 	{
 		m_window = std::unique_ptr<Window>(Window::create());
 		m_window->SetCallback( BIND_FUNC(Application::OnEvent) );
+
+		m_running = true;
+		m_minimized = false;
 	}
 
 	void Application::OnEvent(Event& e)
@@ -22,7 +25,13 @@ namespace Quin
 		EventDispatch dis(e);
 		dis.Dispatch<WindowClosedEvent>(BIND_FUNC(Application::CloseWindow));
 
-		QN_CORE_TRACE( e.GetString() );
+		//QN_CORE_TRACE( e.GetString() );
+		for (auto iter = m_layerStack.reverseStart(); iter != m_layerStack.reverseEnd(); iter++)
+		{
+			if (e.handled)
+				break;
+			(**iter).OnEvent(e);
+		}
 	}
 
 	Application::~Application() {}
@@ -30,10 +39,19 @@ namespace Quin
 	void Application::run()
 	{
 		KeyPressedEvent keeb(420, 69);
-		QN_TRACE( keeb.GetString() );
+		QN_CORE_TRACE( keeb.GetString() );
 
 		while (m_running)
 		{
+
+			if (!m_minimized)
+			{
+				for (auto iter = m_layerStack.Front(); iter != m_layerStack.Back(); iter++)
+				{
+					(**iter).OnUpdate();
+				}
+			}
+
 			m_window->OnUpdate();
 		}
 	}
@@ -42,5 +60,16 @@ namespace Quin
 	{
 		m_running = false;
 		return true;
+	}
+
+	void Application::PushLayer(Layer *layer)
+	{
+		m_layerStack.PushLayer(layer);
+		layer->OnAttach();
+	}
+	void Application::PushOverlay(Layer* overlay)
+	{
+		m_layerStack.PushOverlay(overlay);
+		overlay->OnAttach();
 	}
 }
