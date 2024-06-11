@@ -32,6 +32,8 @@ namespace Quin
 		virtual void SetCallback(const EventCallbackFunc&) = 0;
 		virtual void SetVSync() = 0;
 		virtual bool IsVSync() const = 0;
+
+		virtual void* GetWindow() = 0;
 	};
 
 }

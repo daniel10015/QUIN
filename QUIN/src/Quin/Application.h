@@ -16,6 +16,9 @@ namespace Quin {
 		void OnEvent(Event& e);
 		void PushLayer(Layer* layer);
 		void PushOverlay(Layer* overlay);
+		#ifdef QN_PLATFORM_WINDOWS
+			inline void* GetWindow() { return m_window->GetWindow(); }
+		#endif
 	private:
 		std::unique_ptr<Window> m_window;
 		bool m_running;

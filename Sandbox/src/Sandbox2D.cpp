@@ -1,8 +1,8 @@
 #include "Sandbox2D.h"
 
-SandboxLayer::SandboxLayer() : Layer("Sandbox2D")
+SandboxLayer::SandboxLayer(void* window) : Layer("Sandbox2D")
 {
-
+	scene = new Quin::Renderer2D::Scene2D(window);
 }
 
 SandboxLayer::~SandboxLayer() 
@@ -22,7 +22,7 @@ void SandboxLayer::OnDetach()
 
 void SandboxLayer::OnUpdate()
 {
-
+	scene->RenderFrame();
 }
 
 void SandboxLayer::OnEvent(Quin::Event& event)

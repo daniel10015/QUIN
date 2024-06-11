@@ -11,9 +11,9 @@
 #include <Quin/Layer.h>
 #include <Quin/Events/Event.h>
 // rendering
-#include "Quin/2D Renderer/Camera.h"
-#include "Quin/2D Renderer/Scene2D.h"
-#include "Quin/2D Renderer/Renderer2D.h"
+#include "Quin/2DRenderer/Camera.h"
+#include "Quin/2DRenderer/Scene2D.h"
+//#include "Quin/2D Renderer/Renderer2D.h"
 
 // ------- ENTRY POINT -------
 // ---------------------------

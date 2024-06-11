@@ -34,8 +34,11 @@ namespace Quin
 
 		}
 		// create window 
+		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+		glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE); // no window resizing (for now)
+
 		m_window = glfwCreateWindow(wp.width, wp.height, wp.windowName.c_str(), NULL, NULL);
-		glfwMakeContextCurrent(m_window);
+		//glfwMakeContextCurrent(m_window);
 		glfwSetWindowUserPointer(m_window, &m_windowData); // glfwGetWindowUserPointer(m_Window) returns window data
 		SetVSync();
 
@@ -128,7 +131,6 @@ namespace Quin
 	{
 		// pull update from glfw
 		glfwPollEvents();
-		glfwSwapBuffers(m_window);
 	}
 
 	unsigned int WinWindow::GetWidth() const

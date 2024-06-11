@@ -75,6 +75,7 @@ project "GLFW"
 			"QUIN/vendor/GLFW/src/win32_time.c",
 			"QUIN/vendor/GLFW/src/win32_thread.c",
 			"QUIN/vendor/GLFW/src/win32_window.c",
+			"QUIN/vendor/GLFW/src/win32_platform.h",
 			"QUIN/vendor/GLFW/src/wgl_context.c",
 			"QUIN/vendor/GLFW/src/egl_context.c",
 			"QUIN/vendor/GLFW/src/osmesa_context.c"

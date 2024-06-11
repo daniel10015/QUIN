@@ -7,7 +7,7 @@ class Sandbox : public Quin::Application
 public:
 	Sandbox() 
 	{
-		PushLayer(new SandboxLayer());
+		PushLayer(new SandboxLayer( GetWindow() ));
 	}
 	~Sandbox() {}
 };

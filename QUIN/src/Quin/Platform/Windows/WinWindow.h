@@ -25,6 +25,8 @@ namespace Quin
 		void SetVSync() override;
 		bool IsVSync() const override;
 
+		void* GetWindow() { return m_window; }
+
 	private:
 		GLFWwindow* m_window;
 		struct WindowData

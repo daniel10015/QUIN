@@ -4,8 +4,8 @@
     <Filter Include="Quin">
       <UniqueIdentifier>{E2798B7C-CEB0-8C0D-779D-721063B3080F}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Quin\2D Renderer">
-      <UniqueIdentifier>{BE194861-AA12-67B3-D344-4C38BF9C46BF}</UniqueIdentifier>
+    <Filter Include="Quin\2DRenderer">
+      <UniqueIdentifier>{BE707C38-2AFC-E9FC-330D-6DF19F1746FD}</UniqueIdentifier>
     </Filter>
     <Filter Include="Quin\Events">
       <UniqueIdentifier>{86F35C0D-F2A8-D502-7B9D-CFD9E751CC06}</UniqueIdentifier>
@@ -19,14 +19,14 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Quin.h" />
-    <ClInclude Include="src\Quin\2D Renderer\Camera.h">
-      <Filter>Quin\2D Renderer</Filter>
+    <ClInclude Include="src\Quin\2DRenderer\Camera.h">
+      <Filter>Quin\2DRenderer</Filter>
     </ClInclude>
-    <ClInclude Include="src\Quin\2D Renderer\Renderer2D.h">
-      <Filter>Quin\2D Renderer</Filter>
+    <ClInclude Include="src\Quin\2DRenderer\Renderer2D.h">
+      <Filter>Quin\2DRenderer</Filter>
     </ClInclude>
-    <ClInclude Include="src\Quin\2D Renderer\Scene2D.h">
-      <Filter>Quin\2D Renderer</Filter>
+    <ClInclude Include="src\Quin\2DRenderer\Scene2D.h">
+      <Filter>Quin\2DRenderer</Filter>
     </ClInclude>
     <ClInclude Include="src\Quin\Application.h">
       <Filter>Quin</Filter>
@@ -69,14 +69,14 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\Quin\2D Renderer\Camera.cpp">
-      <Filter>Quin\2D Renderer</Filter>
+    <ClCompile Include="src\Quin\2DRenderer\Camera.cpp">
+      <Filter>Quin\2DRenderer</Filter>
     </ClCompile>
-    <ClCompile Include="src\Quin\2D Renderer\Renderer2D.cpp">
-      <Filter>Quin\2D Renderer</Filter>
+    <ClCompile Include="src\Quin\2DRenderer\Renderer2D.cpp">
+      <Filter>Quin\2DRenderer</Filter>
     </ClCompile>
-    <ClCompile Include="src\Quin\2D Renderer\Scene2D.cpp">
-      <Filter>Quin\2D Renderer</Filter>
+    <ClCompile Include="src\Quin\2DRenderer\Scene2D.cpp">
+      <Filter>Quin\2DRenderer</Filter>
     </ClCompile>
     <ClCompile Include="src\Quin\Application.cpp">
       <Filter>Quin</Filter>
@@ -96,5 +96,11 @@
     <ClCompile Include="src\Quin\qnpch.cpp">
       <Filter>Quin</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="src\Quin\2DRenderer\Shaders\frag.spv" />
+    <None Include="src\Quin\2DRenderer\Shaders\Shader.frag" />
+    <None Include="src\Quin\2DRenderer\Shaders\Shader.vert" />
+    <None Include="src\Quin\2DRenderer\Shaders\vert.spv" />
   </ItemGroup>
 </Project>

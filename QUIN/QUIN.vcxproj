@@ -159,9 +159,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="src\Quin.h" />
-    <ClInclude Include="src\Quin\2D Renderer\Camera.h" />
-    <ClInclude Include="src\Quin\2D Renderer\Renderer2D.h" />
-    <ClInclude Include="src\Quin\2D Renderer\Scene2D.h" />
+    <ClInclude Include="src\Quin\2DRenderer\Camera.h" />
+    <ClInclude Include="src\Quin\2DRenderer\Renderer2D.h" />
+    <ClInclude Include="src\Quin\2DRenderer\Scene2D.h" />
     <ClInclude Include="src\Quin\Application.h" />
     <ClInclude Include="src\Quin\EntryPoint.h" />
     <ClInclude Include="src\Quin\Events\ApplicationEvent.h" />
@@ -177,9 +177,9 @@
     <ClInclude Include="src\Quin\qnpch.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\Quin\2D Renderer\Camera.cpp" />
-    <ClCompile Include="src\Quin\2D Renderer\Renderer2D.cpp" />
-    <ClCompile Include="src\Quin\2D Renderer\Scene2D.cpp" />
+    <ClCompile Include="src\Quin\2DRenderer\Camera.cpp" />
+    <ClCompile Include="src\Quin\2DRenderer\Renderer2D.cpp" />
+    <ClCompile Include="src\Quin\2DRenderer\Scene2D.cpp" />
     <ClCompile Include="src\Quin\Application.cpp" />
     <ClCompile Include="src\Quin\Layer.cpp" />
     <ClCompile Include="src\Quin\LayerStack.cpp" />
@@ -195,6 +195,12 @@
     <ProjectReference Include="vendor\GLFW\GLFW.vcxproj">
       <Project>{154B857C-0182-860D-AA6E-6C109684020F}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="src\Quin\2DRenderer\Shaders\frag.spv" />
+    <None Include="src\Quin\2DRenderer\Shaders\Shader.frag" />
+    <None Include="src\Quin\2DRenderer\Shaders\Shader.vert" />
+    <None Include="src\Quin\2DRenderer\Shaders\vert.spv" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
