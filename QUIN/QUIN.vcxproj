@@ -159,7 +159,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="src\Quin.h" />
+    <ClInclude Include="src\Quin\2DRenderer\Buffer.h" />
     <ClInclude Include="src\Quin\2DRenderer\Camera.h" />
+    <ClInclude Include="src\Quin\2DRenderer\QuinMath.h" />
+    <ClInclude Include="src\Quin\2DRenderer\OrthographicCamera.h" />
     <ClInclude Include="src\Quin\2DRenderer\Renderer2D.h" />
     <ClInclude Include="src\Quin\2DRenderer\Scene2D.h" />
     <ClInclude Include="src\Quin\Application.h" />
@@ -172,12 +175,14 @@
     <ClInclude Include="src\Quin\LayerStack.h" />
     <ClInclude Include="src\Quin\Log.h" />
     <ClInclude Include="src\Quin\Platform\Windows\WinWindow.h" />
+    <ClInclude Include="src\Quin\Timer.h" />
     <ClInclude Include="src\Quin\Window.h" />
     <ClInclude Include="src\Quin\core.h" />
     <ClInclude Include="src\Quin\qnpch.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Quin\2DRenderer\Camera.cpp" />
+    <ClCompile Include="src\Quin\2DRenderer\OrthographicCamera.cpp" />
     <ClCompile Include="src\Quin\2DRenderer\Renderer2D.cpp" />
     <ClCompile Include="src\Quin\2DRenderer\Scene2D.cpp" />
     <ClCompile Include="src\Quin\Application.cpp" />

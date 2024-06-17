@@ -7,9 +7,13 @@
 // ----------------------------
 #include "Quin/Application.h"
 #include "Quin/Log.h"
+#include "Quin/Timer.h"
 // layer
 #include <Quin/Layer.h>
 #include <Quin/Events/Event.h>
+#include <Quin/Events/MouseEvent.h>
+#include <Quin/Events/KeyboardEvent.h>
+#include <Quin/Events/ApplicationEvent.h>
 // rendering
 #include "Quin/2DRenderer/Camera.h"
 #include "Quin/2DRenderer/Scene2D.h"

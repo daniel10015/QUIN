@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <utility>
 #include "Log.h"
+#include "Timer.h"
 
 #include <string>
 #include <vector>

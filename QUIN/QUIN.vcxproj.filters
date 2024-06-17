@@ -67,6 +67,10 @@
     <ClInclude Include="src\Quin\qnpch.h">
       <Filter>Quin</Filter>
     </ClInclude>
+    <ClInclude Include="src\Quin\2DRenderer\OrthographicCamera.h" />
+    <ClInclude Include="src\Quin\2DRenderer\QuinMath.h" />
+    <ClInclude Include="src\Quin\2DRenderer\Buffer.h" />
+    <ClInclude Include="src\Quin\Timer.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Quin\2DRenderer\Camera.cpp">
@@ -96,6 +100,7 @@
     <ClCompile Include="src\Quin\qnpch.cpp">
       <Filter>Quin</Filter>
     </ClCompile>
+    <ClCompile Include="src\Quin\2DRenderer\OrthographicCamera.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="src\Quin\2DRenderer\Shaders\frag.spv" />

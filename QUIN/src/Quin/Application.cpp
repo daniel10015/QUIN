@@ -38,8 +38,6 @@ namespace Quin
 
 	void Application::run()
 	{
-		KeyPressedEvent keeb(420, 69);
-		QN_CORE_TRACE( keeb.GetString() );
 
 		while (m_running)
 		{

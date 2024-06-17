@@ -3,6 +3,8 @@
 #include <vulkan/vulkan.h>
 #include <vector>
 #include <optional>
+#include "Buffer.h"
+#include <Quin/Timer.h>
 
 typedef void* GLFW_WINDOW_POINTER;
 
@@ -29,8 +31,13 @@ namespace Quin { namespace Renderer2D
 		~Renderer2D();
 		// simple draw function for now
 		void DrawFrame();
+		void SetModelViewProjectionMatrix(const glm::mat4& mvpm);
+		void InitializeModelViewProjectionMatrix(const glm::mat4& mvpm);
+		void AddQuadToBatch(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color);
+		bool InitVulkan();
 		// variables
 	private:
+		bool vulkanInitialized = false;
 		// viewport
 		GLFW_WINDOW_POINTER m_window;
 		double m_x_pos, m_y_pos, m_x_width, m_y_width;
@@ -47,23 +54,47 @@ namespace Quin { namespace Renderer2D
 		VkFormat swapChainImageFormat;
 		VkExtent2D swapChainExtent;
 		VkRenderPass m_renderPass;
+		VkDescriptorSetLayout m_descriptorSetLayout;
 		VkPipelineLayout m_pipelineLayout;
 		VkPipeline m_graphicsPipeline;
 		std::vector<VkFramebuffer> m_swapChainFramebuffers;
 		VkCommandPool m_commandPool;
-		VkCommandBuffer m_commandBuffer;
-		VkSemaphore m_imageAvailableSemaphore;
-		VkSemaphore m_renderFinishedSemaphore;
-		VkFence m_inFlightFence;
+		std::vector<VkCommandBuffer> m_commandBuffers;
+		std::vector<VkSemaphore> m_imageAvailableSemaphores;
+		std::vector<VkSemaphore> m_renderFinishedSemaphores;
+		std::vector<VkFence> m_inFlightFences;
+		// vertex and index buffer Vkmemory handles
+		VkBuffer m_vertexBuffer;
+		VkDeviceMemory m_vertexBufferMemory;
+		VkBuffer m_indexBuffer;
+		VkDeviceMemory m_indexBufferMemory;
+		// have as many uniform buffers as we have frames in flight
+		std::vector<VkBuffer> m_uniformBuffers;
+		std::vector<VkDeviceMemory> m_uniformBuffersMemory;
+		std::vector<void*> m_uniformBuffersMapped;
+		bool m_uniformDataSent = false;
+
+		VkDescriptorPool m_descriptorPool;
+		std::vector<VkDescriptorSet> m_descriptorSets; // hold descriptor sets for every frame in flight
+
+		bool m_framebufferResized = false; // sometimes drivers won't trigger VK_ERROR_OUT_OF_DATE_KHR for swapchain recreation
 		const std::vector<const char*> validationLayers = { // should change this to m_ prefix
 			"VK_LAYER_KHRONOS_validation"
 		};
 		const std::vector<const char*> m_deviceExtensions = {
 			VK_KHR_SWAPCHAIN_EXTENSION_NAME
 		};
-		// setup validations and instance
+		uint32_t currentFrame=0;
+		// rendering data
 	private:
-		bool InitVulkan(GLFW_WINDOW_POINTER window);
+		std::vector<vertex2D> m_vertexData;
+		std::vector<uint32_t> m_indices;
+		glm::mat4 m_modelViewProjectionMatrix;
+		// setup validations and instance
+	// utility data
+	private:
+		::Quin::timer m_renderingTime;
+	private:
 		void ClearVulkan();
 		bool CreateInstance();
 		std::vector<const char*> GetRequiredExtensions();
@@ -96,16 +127,31 @@ namespace Quin { namespace Renderer2D
 		void CreateImageViews();
 	// rendering pipeline
 	private: // temporary, going to change soon!
+		void CreateDescriptorSetLayout();
 		void CreateGraphicsPipeline();
 		VkShaderModule CreateShaderModule(const std::vector<char>& code);
 		void CreateRenderPass();
+		// frame/vertex buffers
 		void CreateFrameBuffers();
+		void CreateVertexBuffer();
+		void CreateIndexBuffer();
+		// functions for uniform buffers
+		void CreateUniformBuffers();
+		void CreateDescriptorPool();
+		void CreateDescriptorSets();
+		// command buffer functions
 		void CreateCommandPool();
-		void CreateCommandBuffer();
+		void CreateCommandBuffers();
 		void RecordCommandBuffer(VkCommandBuffer, uint32_t);
 		void CreateSyncObjects();
+	private:
+		void RecreateSwapChain();
+		void CleanupSwapChain();
 	// utilities
 	private:
 		static std::vector<char> ReadFile(const std::string& filename); // reads binary file, returns the bytes
-	};
+		uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
+		void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
+		void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size); // copy src buf to dst buf
+};
 }}
