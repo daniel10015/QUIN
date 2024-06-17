@@ -80,7 +80,7 @@
       <PrecompiledHeaderFile>qnpch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>QN_PLATFORM_WINDOWS;QN_BUILD_DLL;QN_ENABLE_ASSERTS;QN_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>src;src\Quin;vendor\spdlog\include;vendor\GLFW\include;\VulkanSDK\1.3.280.0\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>src;src\Quin;vendor\spdlog\include;vendor\GLFW\include;vendor\stb;\VulkanSDK\1.3.280.0\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -105,7 +105,7 @@
       <PrecompiledHeaderFile>qnpch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>QN_PLATFORM_WINDOWS;QN_BUILD_DLL;QN_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>src;src\Quin;vendor\spdlog\include;vendor\GLFW\include;\VulkanSDK\1.3.280.0\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>src;src\Quin;vendor\spdlog\include;vendor\GLFW\include;vendor\stb;\VulkanSDK\1.3.280.0\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -134,7 +134,7 @@
       <PrecompiledHeaderFile>qnpch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>QN_PLATFORM_WINDOWS;QN_BUILD_DLL;QN_DIST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>src;src\Quin;vendor\spdlog\include;vendor\GLFW\include;\VulkanSDK\1.3.280.0\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>src;src\Quin;vendor\spdlog\include;vendor\GLFW\include;vendor\stb;\VulkanSDK\1.3.280.0\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -161,8 +161,8 @@
     <ClInclude Include="src\Quin.h" />
     <ClInclude Include="src\Quin\2DRenderer\Buffer.h" />
     <ClInclude Include="src\Quin\2DRenderer\Camera.h" />
-    <ClInclude Include="src\Quin\2DRenderer\QuinMath.h" />
     <ClInclude Include="src\Quin\2DRenderer\OrthographicCamera.h" />
+    <ClInclude Include="src\Quin\2DRenderer\QuinMath.h" />
     <ClInclude Include="src\Quin\2DRenderer\Renderer2D.h" />
     <ClInclude Include="src\Quin\2DRenderer\Scene2D.h" />
     <ClInclude Include="src\Quin\Application.h" />
@@ -200,12 +200,6 @@
     <ProjectReference Include="vendor\GLFW\GLFW.vcxproj">
       <Project>{154B857C-0182-860D-AA6E-6C109684020F}</Project>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="src\Quin\2DRenderer\Shaders\frag.spv" />
-    <None Include="src\Quin\2DRenderer\Shaders\Shader.frag" />
-    <None Include="src\Quin\2DRenderer\Shaders\Shader.vert" />
-    <None Include="src\Quin\2DRenderer\Shaders\vert.spv" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -6,6 +6,9 @@
 #include "Events/ApplicationEvent.h"
 #include "Events/KeyboardEvent.h"
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
 namespace Quin
 {
 
@@ -38,6 +41,16 @@ namespace Quin
 		glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE); // no window resizing (for now)
 
 		m_window = glfwCreateWindow(wp.width, wp.height, wp.windowName.c_str(), NULL, NULL);
+
+		int iconWidth, iconHeight, channels;
+		unsigned char* iconPixels = stbi_load("../Quin/Assets/Rn.png", &iconWidth, &iconHeight, &channels, 4);
+
+		GLFWimage iconData{};
+		iconData.height = iconHeight;
+		iconData.width = iconWidth;
+		iconData.pixels = iconPixels;
+		glfwSetWindowIcon(m_window, 1, &iconData);
+
 		//glfwMakeContextCurrent(m_window);
 		glfwSetWindowUserPointer(m_window, &m_windowData); // glfwGetWindowUserPointer(m_Window) returns window data
 		SetVSync();

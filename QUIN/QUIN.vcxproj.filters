@@ -19,7 +19,16 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Quin.h" />
+    <ClInclude Include="src\Quin\2DRenderer\Buffer.h">
+      <Filter>Quin\2DRenderer</Filter>
+    </ClInclude>
     <ClInclude Include="src\Quin\2DRenderer\Camera.h">
+      <Filter>Quin\2DRenderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Quin\2DRenderer\OrthographicCamera.h">
+      <Filter>Quin\2DRenderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Quin\2DRenderer\QuinMath.h">
       <Filter>Quin\2DRenderer</Filter>
     </ClInclude>
     <ClInclude Include="src\Quin\2DRenderer\Renderer2D.h">
@@ -58,6 +67,9 @@
     <ClInclude Include="src\Quin\Platform\Windows\WinWindow.h">
       <Filter>Quin\Platform\Windows</Filter>
     </ClInclude>
+    <ClInclude Include="src\Quin\Timer.h">
+      <Filter>Quin</Filter>
+    </ClInclude>
     <ClInclude Include="src\Quin\Window.h">
       <Filter>Quin</Filter>
     </ClInclude>
@@ -67,13 +79,12 @@
     <ClInclude Include="src\Quin\qnpch.h">
       <Filter>Quin</Filter>
     </ClInclude>
-    <ClInclude Include="src\Quin\2DRenderer\OrthographicCamera.h" />
-    <ClInclude Include="src\Quin\2DRenderer\QuinMath.h" />
-    <ClInclude Include="src\Quin\2DRenderer\Buffer.h" />
-    <ClInclude Include="src\Quin\Timer.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Quin\2DRenderer\Camera.cpp">
+      <Filter>Quin\2DRenderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Quin\2DRenderer\OrthographicCamera.cpp">
       <Filter>Quin\2DRenderer</Filter>
     </ClCompile>
     <ClCompile Include="src\Quin\2DRenderer\Renderer2D.cpp">
@@ -100,12 +111,5 @@
     <ClCompile Include="src\Quin\qnpch.cpp">
       <Filter>Quin</Filter>
     </ClCompile>
-    <ClCompile Include="src\Quin\2DRenderer\OrthographicCamera.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="src\Quin\2DRenderer\Shaders\frag.spv" />
-    <None Include="src\Quin\2DRenderer\Shaders\Shader.frag" />
-    <None Include="src\Quin\2DRenderer\Shaders\Shader.vert" />
-    <None Include="src\Quin\2DRenderer\Shaders\vert.spv" />
   </ItemGroup>
 </Project>
