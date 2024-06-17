@@ -13,6 +13,8 @@ namespace Quin
 		void SetPosition(glm::vec3 pos);
 		const glm::vec3& GetPosition() { return m_position; }
 
+		void SetZoom(float differential);
+
 		const glm::mat4& GetProjectionMatrix() { return m_projectionMatrix; }
 		const glm::mat4& GetViewMatrix() { return m_viewMatrix; }
 		const glm::mat4& GetProjectionViewMatrix() { return m_projectionViewMatrix; }
@@ -25,6 +27,7 @@ namespace Quin
 
 		glm::vec3 m_position = {0.0f, 0.0f, 0.0f};
 
+		float m_left, m_right, m_top, m_bottom;
 	};
 
 }

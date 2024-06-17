@@ -20,6 +20,8 @@ namespace Quin { namespace Renderer2D
 	
 		void UpdateCameraPosition(glm::vec3 position);
 		const glm::vec3& GetCameraPosition();
+
+		void UpdateZoom(float diff);
 	private:
 		OrthographicCamera* m_camera;
 		Renderer2D* renderer;

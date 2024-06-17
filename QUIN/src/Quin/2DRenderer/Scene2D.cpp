@@ -48,4 +48,10 @@ namespace Quin { namespace Renderer2D
 	{
 		return m_camera->GetPosition();
 	}
+
+	void Scene2D::UpdateZoom(float diff)
+	{
+		m_camera->SetZoom(diff);
+		renderer->SetModelViewProjectionMatrix(m_camera->GetProjectionViewMatrix());
+	}
 }}

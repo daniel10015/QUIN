@@ -1,13 +1,16 @@
 #include "Sandbox2D.h"
 
+#define CAMERA_ZOOM_FACTOR 0.05f
+#define CAMERA_ZOOM_FACTOR_DIFFERENTIAL CAMERA_ZOOM_FACTOR/2.0f
+
 SandboxLayer::SandboxLayer(void* window) : Layer("Sandbox2D")
 {
 	// x-axis camera setup
 	float left  =  m_cameraView[0]/2 - m_cameraView[0];
 	float right =  m_cameraView[0]/2;
 	// y-axis camera setup
-	float up    =  m_cameraView[1]/2 - m_cameraView[1];
-	float down =   m_cameraView[1]/2;
+	float up    =  m_cameraView[1]/2;
+	float down =   m_cameraView[1]/2 - m_cameraView[1];
 
 	scene = new Quin::Renderer2D::Scene2D(window, left, right, up, down);
 }
@@ -89,8 +92,14 @@ bool SandboxLayer::MouseMovedEvent(const Quin::MouseMoveEvent& event)
 bool SandboxLayer::MouseScrollEvent(const Quin::MouseScrollEvent& event)
 {
 	QN_TRACE("Mouse Scroll Event: {0}", event.GetString());
-	glm::vec3 cameraPos = scene->GetCameraPosition();
-	scene->UpdateCameraPosition(glm::vec3(cameraPos[0], cameraPos[1], cameraPos[2] + event.GetOffsetY()));
+	float differential = -event.GetOffsetY() * CAMERA_ZOOM_FACTOR; // this is just 1 click, set to +/-0.05
+	m_cameraView[0] *= (1+differential); // currWidth*= +/- 1.05
+	m_cameraView[1] *= (1+differential); // currHeight*= +/- 1.05
+	scene->UpdateZoom(differential);
+
+	QN_TRACE("camera view: ({0},{1})", m_cameraView[0], m_cameraView[1]);
+
+	RecomputeWindowToWorld();
 
 	return true;
 }
