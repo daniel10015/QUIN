@@ -10,8 +10,8 @@ namespace Quin {
 	public:
 		MouseMoveEvent(float x, float y)
 			: m_posX(x), m_posY(y) {}
-		inline float GetMouseX() { return m_posX; }
-		inline float GetMouseY() { return m_posY; }
+		inline float GetMouseX() const { return m_posX; }
+		inline float GetMouseY() const { return m_posY; }
 
 		std::string GetString() const override
 		{
@@ -29,8 +29,8 @@ namespace Quin {
 	public:
 		MouseScrollEvent(float x, float y)
 			: m_OffsetX(x), m_OffsetY(y) {}
-		inline float GetOffsetX() { return m_OffsetX; }
-		inline float GetOffsetY() { return m_OffsetY; }
+		inline float GetOffsetX() const { return m_OffsetX; }
+		inline float GetOffsetY() const { return m_OffsetY; }
 
 		std::string GetString() const override
 		{

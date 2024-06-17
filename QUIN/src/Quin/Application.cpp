@@ -10,7 +10,6 @@
 
 namespace Quin
 {
-#define BIND_FUNC(x) std::bind(&x, this, std::placeholders::_1)
 	Application::Application() 
 	{
 		m_window = std::unique_ptr<Window>(Window::create());

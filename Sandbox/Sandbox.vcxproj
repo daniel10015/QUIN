@@ -148,6 +148,17 @@
       <Project>{82ED8A7C-6E24-8C0D-1711-72100327080F}</Project>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <Image Include="Assets\Textures\Sprites\D_Attack.png" />
+    <Image Include="Assets\Textures\Sprites\D_Death.png" />
+    <Image Include="Assets\Textures\Sprites\D_Walk.png" />
+    <Image Include="Assets\Textures\Sprites\S_Attack.png" />
+    <Image Include="Assets\Textures\Sprites\S_Death.png" />
+    <Image Include="Assets\Textures\Sprites\S_Walk.png" />
+    <Image Include="Assets\Textures\Sprites\U_Attack.png" />
+    <Image Include="Assets\Textures\Sprites\U_Death.png" />
+    <Image Include="Assets\Textures\Sprites\U_Walk.png" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

@@ -4,6 +4,7 @@
 #include "Events/Event.h"
 #include "Events/ApplicationEvent.h"
 #include "LayerStack.h"
+#define BIND_FUNC(x) std::bind(&x, this, std::placeholders::_1)
 
 namespace Quin {
 	class QUIN_API Application

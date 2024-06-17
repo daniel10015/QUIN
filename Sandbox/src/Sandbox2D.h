@@ -18,7 +18,7 @@ private:
 // application variables
 private:
 	glm::vec2 m_mouseCoordinates = { 0.0f, 0.0f };
-	bool mousePress = false;
+	bool m_mousePress = false;
 	// camera space is MxN (20x20)
 	const glm::vec2 m_cameraView = { 20.0f, 20.0f };
 
@@ -31,4 +31,10 @@ private:
 // utilities
 private:
 	Quin::timer application_time;
+// event handlers
+private:
+	bool MousePressedEvent(const Quin::MousePressedEvent&);
+	bool MouseReleasedEvent(const Quin::MouseReleasedEvent&);
+	bool MouseMovedEvent(const Quin::MouseMoveEvent&); 
+	bool MouseScrollEvent(const Quin::MouseScrollEvent&);
 };
