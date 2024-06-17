@@ -4,3 +4,6 @@
 [submodule "QUIN/vendor/GLFW"]
 	path = QUIN/vendor/GLFW
 	url = https://github.com/glfw/glfw
+[submodule "QUIN/vendor/stb"]
+	path = QUIN/vendor/stb
+	url = https://github.com/nothings/stb.git
