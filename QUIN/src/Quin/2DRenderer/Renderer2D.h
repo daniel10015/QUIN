@@ -33,8 +33,9 @@ namespace Quin { namespace Renderer2D
 		void DrawFrame();
 		void SetModelViewProjectionMatrix(const glm::mat4& mvpm);
 		void InitializeModelViewProjectionMatrix(const glm::mat4& mvpm);
-		void AddQuadToBatch(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color);
+		void AddQuadToBatch(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color, const glm::mat2& texCoords);
 		bool InitVulkan();
+		bool AddTextureImage(const std::string& path, unsigned int width_offset = 0, unsigned int width = 0, unsigned int height_offset = 0, unsigned int height = 0);
 		// variables
 	private:
 		bool vulkanInitialized = false;
@@ -68,6 +69,16 @@ namespace Quin { namespace Renderer2D
 		VkDeviceMemory m_vertexBufferMemory;
 		VkBuffer m_indexBuffer;
 		VkDeviceMemory m_indexBufferMemory;
+		// texture handles and variables (these will become vectors later)
+		VkImage m_textureImage;
+		VkDeviceMemory m_textureImageMemory;
+		VkImageView m_textureImageView;
+		VkSampler m_textureSampler;
+		// texture information
+		uint32_t MAX_TEXTURE_LENGTH;
+		unsigned char* m_texturePixels;
+		uint32_t m_texWidth, m_texHeight;
+		VkDeviceSize m_textureImageSize;
 		// have as many uniform buffers as we have frames in flight
 		std::vector<VkBuffer> m_uniformBuffers;
 		std::vector<VkDeviceMemory> m_uniformBuffersMemory;
@@ -125,6 +136,7 @@ namespace Quin { namespace Renderer2D
 		VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
 		void CreateSwapChain();
 		void CreateImageViews();
+		VkImageView CreateImageView(VkImage image, VkFormat format);
 	// rendering pipeline
 	private: // temporary, going to change soon!
 		void CreateDescriptorSetLayout();
@@ -142,9 +154,18 @@ namespace Quin { namespace Renderer2D
 		// command buffer functions
 		void CreateCommandPool();
 		void CreateCommandBuffers();
+		// single use buffer creation and deletion
+		VkCommandBuffer CreateSingleTimeCommandBuffer();
+		void EndSingleTimeCommandBuffer(VkCommandBuffer cmdBuf);
 		void RecordCommandBuffer(VkCommandBuffer, uint32_t);
 		void CreateSyncObjects();
-	private:
+		void CreateTextureImage();
+		void CreateTextureImageView();
+		void CreateTextureSampler();
+		void CreateImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
+		void TransitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
+		void CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
+private:
 		void RecreateSwapChain();
 		void CleanupSwapChain();
 	// utilities

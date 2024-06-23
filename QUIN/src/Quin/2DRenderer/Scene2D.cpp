@@ -28,9 +28,9 @@ namespace Quin { namespace Renderer2D
 		renderer->DrawFrame();
 	}
 
-	void Scene2D::DrawQuad(float position_x, float position_y, float width, float height, const std::array<float, 4>& color)
+	void Scene2D::DrawQuad(float position_x, float position_y, float width, float height, const std::array<float, 4>& color, const std::array<float, 4>& texCoords)
 	{
-		renderer->AddQuadToBatch(glm::vec2(position_x, position_y), glm::vec2(width, height), glm::vec4(color[0], color[1], color[2], color[3]));
+		renderer->AddQuadToBatch(glm::vec2(position_x, position_y), glm::vec2(width, height), glm::vec4(color[0], color[1], color[2], color[3]), glm::mat2(texCoords[0], texCoords[1], texCoords[2], texCoords[3]));
 	}
 
 	void Scene2D::InitializeRenderer()
@@ -53,5 +53,12 @@ namespace Quin { namespace Renderer2D
 	{
 		m_camera->SetZoom(diff);
 		renderer->SetModelViewProjectionMatrix(m_camera->GetProjectionViewMatrix());
+	}
+
+	bool Scene2D::AddTexture(const std::string& path, unsigned int width_offset, unsigned int width, unsigned int height_offset, unsigned int height)
+	{
+		bool ret = renderer->AddTextureImage(path, width_offset, width, height_offset, height);
+		QN_CORE_ASSERT(ret, "Failed to Add Texture Image!");
+		return ret;
 	}
 }}

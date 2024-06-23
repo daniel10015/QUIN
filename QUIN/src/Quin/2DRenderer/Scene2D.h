@@ -16,12 +16,13 @@ namespace Quin { namespace Renderer2D
 		void InitializeRenderer();
 		// for render frame
 		void RenderFrame();
-		void DrawQuad(float position_x, float position_y, float width, float height, const std::array<float, 4>& color = {0.0, 0.0, 1.0, 0.0}); // blue default
+		void DrawQuad(float position_x, float position_y, float width, float height, const std::array<float, 4>& color = { 0.0, 0.0, 1.0, 0.0 }, const std::array<float, 4>& texCoords = {0.0, 0.0, 1.0, 1.0}); // blue default
 	
 		void UpdateCameraPosition(glm::vec3 position);
 		const glm::vec3& GetCameraPosition();
 
 		void UpdateZoom(float diff);
+		bool AddTexture(const std::string& path, unsigned int width_offset = 0, unsigned int width = 0, unsigned int height_offset = 0, unsigned int height = 0);
 	private:
 		OrthographicCamera* m_camera;
 		Renderer2D* renderer;

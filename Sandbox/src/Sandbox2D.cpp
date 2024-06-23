@@ -22,6 +22,7 @@ SandboxLayer::~SandboxLayer()
 
 void SandboxLayer::OnAttach()
 {
+	scene->AddTexture("Assets/Textures/Sprites/D_Walk.png", 18-12/2, 12+12, 15, 24); // configure parameters accordingly...
 	scene->DrawQuad(0.3, 0.3, 0.5, 0.3);
 	scene->DrawQuad(-0.75, -0.75, 0.25, 0.50);
 	scene->InitializeRenderer();

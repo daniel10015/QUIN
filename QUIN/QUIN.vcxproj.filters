@@ -111,5 +111,12 @@
     <ClCompile Include="src\Quin\qnpch.cpp">
       <Filter>Quin</Filter>
     </ClCompile>
+    <ClCompile Include="src\Quin\stb_image.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="src\Quin\2DRenderer\Shaders\frag.spv" />
+    <None Include="src\Quin\2DRenderer\Shaders\Shader.frag" />
+    <None Include="src\Quin\2DRenderer\Shaders\Shader.vert" />
+    <None Include="src\Quin\2DRenderer\Shaders\vert.spv" />
   </ItemGroup>
 </Project>

@@ -1,5 +1,6 @@
 #include <qnpch.h>
 #include "Renderer2D.h"
+#include <stb_image.h>
 #include <vulkan/vulkan.h>
 #define VK_USE_PLATFORM_WIN32_KHR
 #define GLFW_INCLUDE_VULKAN
@@ -69,6 +70,9 @@ namespace Quin { namespace Renderer2D
 		CreateGraphicsPipeline();
 		CreateFrameBuffers();
 		CreateCommandPool();
+		CreateTextureImage();
+		CreateTextureImageView();
+		CreateTextureSampler();
 		// create buffers
 		CreateVertexBuffer();
 		CreateIndexBuffer();
@@ -98,6 +102,13 @@ namespace Quin { namespace Renderer2D
 	{
 		CleanupSwapChain();
 
+		// destroy sampler
+		vkDestroySampler(m_device, m_textureSampler, nullptr);
+		// destroy and free texture
+		vkDestroyImageView(m_device, m_textureImageView, nullptr);
+		vkDestroyImage(m_device, m_textureImage, nullptr);
+		vkFreeMemory(m_device, m_textureImageMemory, nullptr);
+
 		for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
 			vkDestroyBuffer(m_device, m_uniformBuffers[i], nullptr);
 			vkFreeMemory(m_device, m_uniformBuffersMemory[i], nullptr);
@@ -105,9 +116,11 @@ namespace Quin { namespace Renderer2D
 		// automatically destroys descriptor sets
 		vkDestroyDescriptorSetLayout(m_device, m_descriptorSetLayout, nullptr);
 		
+		// destroy and free index buffer
 		vkDestroyBuffer(m_device, m_indexBuffer, nullptr);
 		vkFreeMemory(m_device, m_indexBufferMemory, nullptr);
 
+		// destroy and free vertex buffer
 		vkDestroyBuffer(m_device, m_vertexBuffer, nullptr);
 		vkFreeMemory(m_device, m_vertexBufferMemory, nullptr);
 
@@ -209,13 +222,13 @@ namespace Quin { namespace Renderer2D
 		m_modelViewProjectionMatrix = mvpm;
 	}
 
-	void Renderer2D::AddQuadToBatch(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color) {
+	void Renderer2D::AddQuadToBatch(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color, const glm::mat2& texCoords) {
 		// Calculate positions of the quad vertices
 		// negate y-coordinate because vulkan rendering has y increasing downwards
-		m_vertexData.push_back({ glm::vec2(position.x, -(position.y + size.y)), color }); // top left
-		m_vertexData.push_back({ glm::vec2(position.x + size.x, -(position.y + size.y)), color }); // top right
-		m_vertexData.push_back({ glm::vec2(position.x + size.x, -(position.y)), color }); // bottom right
-		m_vertexData.push_back({ glm::vec2(position.x, -(position.y)), color }); // bottom left
+		m_vertexData.push_back({ glm::vec2(position.x, -(position.y + size.y)), color, texCoords[0]}); // top left
+		m_vertexData.push_back({ glm::vec2(position.x + size.x, -(position.y + size.y)), color, {texCoords[1][0], texCoords[0][1]}}); // top right
+		m_vertexData.push_back({ glm::vec2(position.x + size.x, -(position.y)), color, texCoords[1] }); // bottom right
+		m_vertexData.push_back({ glm::vec2(position.x, -(position.y)), color, {texCoords[0][0], texCoords[1][1]} }); // bottom left
 
 		uint32_t startIndex = static_cast<uint32_t>(m_vertexData.size()) - 4;
 		m_indices.push_back(startIndex); // top left
@@ -228,6 +241,269 @@ namespace Quin { namespace Renderer2D
 		QN_CORE_TRACE("Quad added to batch: vertex size = {0} , indices size = {1}", m_vertexData.size(), m_indices.size());
 	
 		PRINT_QUAD_INFO
+	}
+
+	// true: successfuly reads image
+	// false: can't read 
+	// CreateTextureImage
+	bool Renderer2D::AddTextureImage(const std::string& path, unsigned int width_offset, unsigned int width, unsigned int height_offset, unsigned int height)
+	{
+		int texWidth, texHeight, texChannels;
+		stbi_uc* pixels = stbi_load(path.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+		unsigned char* temp_pixels = nullptr;
+		bool usingCustomDimensions = false;
+
+		if (!pixels)
+		{
+			PRINT_SYSTEM_PATH;
+			QN_CORE_ERROR("Failed to load image as texture {0}", path);
+			return false;
+		}
+
+		if (texWidth < width_offset + width || texHeight < height_offset + height)
+		{
+			stbi_image_free(pixels);
+			QN_CORE_ERROR("out-of-bounds when loading image as texture {0}, params: w_off {1}, w {2}, h_off {3}, h {4}", path, width_offset, width, height_offset, height);
+			return false;
+		}
+		// use custom formatting if supplied, otherwise use whole tex
+		if (width != 0 && height != 0)
+		{
+			usingCustomDimensions = true;
+			temp_pixels = new unsigned char[width * height * STBI_rgb_alpha]; // alloc memory for custom tex drawing
+			for (unsigned int i = 0; i < height; i++)
+			{
+				memcpy(temp_pixels + i * width * STBI_rgb_alpha, pixels + ((height_offset + i) * texWidth + width_offset) * STBI_rgb_alpha, width * STBI_rgb_alpha); // Copy the width block for every row
+			}
+			stbi_image_free(pixels);
+			pixels = temp_pixels;
+
+			texWidth = width;
+			texHeight = height;
+		}
+		else
+		{
+			size_t size = static_cast<size_t>(texWidth) * texHeight * STBI_rgb_alpha;
+			temp_pixels = new unsigned char[size];
+			memcpy(temp_pixels, pixels, size);
+			stbi_image_free(pixels);
+			pixels = temp_pixels;
+		}
+
+		// assign crucial details for later computation
+		m_textureImageSize = static_cast<VkDeviceSize>(texWidth) * texHeight * 4;
+		m_texHeight = texHeight;
+		m_texWidth = texWidth;
+		m_texturePixels = pixels;
+
+		QN_CORE_INFO("texture pixels at (0,0): R:{0}, G:{1}, B:{2}, A:{3}", m_texturePixels[0], m_texturePixels[1], m_texturePixels[2], m_texturePixels[3]);
+
+		return true;
+	}
+
+	void Renderer2D::CreateTextureImage()
+	{
+		// get physical device limits for texture-atlas creation
+		VkPhysicalDeviceProperties properties{};
+		vkGetPhysicalDeviceProperties(m_physicalDevice, &properties);
+		MAX_TEXTURE_LENGTH = properties.limits.maxImageDimension2D;
+		QN_CORE_INFO("Max texture size is ({0},{0})", MAX_TEXTURE_LENGTH);
+
+		// create buffer in shared memory
+		VkBuffer stagingBuffer;
+		VkDeviceMemory stagingBufferMemory;
+
+		CreateBuffer(m_textureImageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+
+		// map memory
+		void* data;
+		vkMapMemory(m_device, stagingBufferMemory, 0, m_textureImageSize, 0, &data);
+		memcpy(data, m_texturePixels, (size_t)m_textureImageSize);
+		// to avoid caching errors we require memory must have VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+		// we could also vkFlushMemoryRanges() which *may* increase performance
+		vkUnmapMemory(m_device, stagingBufferMemory);
+
+		// free pixel memory because it already got copied to the staging buffer
+		delete[] m_texturePixels;
+
+		// allocate memory and bind image
+		CreateImage(m_texWidth, m_texHeight, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_textureImage, m_textureImageMemory);
+		// transition layout to optimize for destination (when copying buffer to image)
+		TransitionImageLayout(m_textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+		CopyBufferToImage(stagingBuffer, m_textureImage, m_texWidth, m_texHeight);
+
+		// transition to optimize layout for the shader
+		TransitionImageLayout(m_textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+		// clean up staging buffers
+		vkDestroyBuffer(m_device, stagingBuffer, nullptr);
+		vkFreeMemory(m_device, stagingBufferMemory, nullptr);
+	}
+
+	// describes how textures are read by fragment shader
+	void Renderer2D::CreateTextureImageView()
+	{
+		m_textureImageView = CreateImageView(m_textureImage, VK_FORMAT_R8G8B8A8_SRGB);
+	}
+
+	void Renderer2D::CreateTextureSampler()
+	{
+		VkPhysicalDeviceProperties properties{};
+		vkGetPhysicalDeviceProperties(m_physicalDevice, &properties);
+
+		// for starting out, use linear sampling and clamp texture to edge
+		VkSamplerCreateInfo samplerInfo{};
+		samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+		samplerInfo.magFilter = VK_FILTER_NEAREST; // good for pixel art
+		samplerInfo.minFilter = VK_FILTER_LINEAR; // good for regular art
+		samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
+		samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
+		samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
+
+		// anisotropy limits the amount of texel samples that can be used to calculate the final color
+		samplerInfo.anisotropyEnable = VK_TRUE;
+		samplerInfo.maxAnisotropy = properties.limits.maxSamplerAnisotropy; // use max quality 
+		samplerInfo.borderColor = VK_BORDER_COLOR_INT_TRANSPARENT_BLACK; // transparent
+		samplerInfo.unnormalizedCoordinates = VK_FALSE; // genereally always use normalized coordinates
+		samplerInfo.compareEnable = VK_FALSE; // genereally only used on shadow maps
+		samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
+		
+		// mipmapping fields, not used right now
+		samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+		samplerInfo.mipLodBias = 0.0f;
+		samplerInfo.minLod = 0.0f;
+		samplerInfo.maxLod = 0.0f;
+
+		QN_CORE_ASSERT(vkCreateSampler(m_device, &samplerInfo, nullptr, &m_textureSampler) == VK_SUCCESS, "Failed to Create Texture Sampler!");
+	}
+
+	void Renderer2D::CreateImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags memoryProperties, VkImage& image, VkDeviceMemory& imageMemory)
+	{
+		// create 
+		VkImageCreateInfo imageInfo{};
+		imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+		imageInfo.imageType = VK_IMAGE_TYPE_2D; // 2D texture
+		imageInfo.extent.width = width; // x-axis
+		imageInfo.extent.height = height; // y-axis
+		imageInfo.extent.depth = 1; // z-axis
+		imageInfo.mipLevels = 1; // don't use mipmpapping for now
+		imageInfo.arrayLayers = 1;
+		imageInfo.format = format;
+		imageInfo.tiling = tiling; // more optimal than linear (obviously)
+		imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED; // discard texels after transfer operation
+		imageInfo.usage = usage; // sampled means to use data in the shader
+		imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE; // only use one queue family (graphics family)
+		imageInfo.samples = VK_SAMPLE_COUNT_1_BIT; // no multisampling yet
+		imageInfo.flags = 0; // Optional
+
+		QN_CORE_ASSERT(vkCreateImage(m_device, &imageInfo, nullptr, &image) == VK_SUCCESS, "Failed to create image!");
+
+		VkMemoryRequirements memoryRequirements{};
+		vkGetImageMemoryRequirements(m_device, image, &memoryRequirements);
+
+		VkMemoryAllocateInfo allocInfo{};
+		allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+		allocInfo.allocationSize = memoryRequirements.size;
+		allocInfo.memoryTypeIndex = FindMemoryType(memoryRequirements.memoryTypeBits, memoryProperties);
+
+		// alloc memory
+		QN_CORE_ASSERT(vkAllocateMemory(m_device, &allocInfo, nullptr, &imageMemory) == VK_SUCCESS, "Failed to allocate memory for texture!");
+		// bind texture to memory
+		vkBindImageMemory(m_device, image, imageMemory, 0);
+	}
+
+	//  For practical applications it is recommended to combine these operations in a single command buffer 
+	// and execute them asynchronously for higher throughput, especially the transitions and copy in 
+	// the createTextureImage function.
+	// Experiment with this by creating a setupCommandBuffer that the helper functions record commands into, 
+	// and add a flushSetupCommands to execute the commands that have been recorded so far.
+	void Renderer2D::TransitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout)
+	{
+		VkCommandBuffer commandBuffer = CreateSingleTimeCommandBuffer();
+
+		// use pipeline barrier to change image layout
+		VkImageMemoryBarrier barrier{};
+		barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+		barrier.oldLayout = oldLayout;
+		barrier.newLayout = newLayout;
+		barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		// image to be affected
+		barrier.image = image;
+		barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		// parts of the image to be affected 
+		barrier.subresourceRange.baseMipLevel = 0;
+		barrier.subresourceRange.levelCount = 1;
+		barrier.subresourceRange.baseArrayLayer = 0;
+		barrier.subresourceRange.layerCount = 1;
+
+		// determine flags for pipeline barrier command
+		VkPipelineStageFlags sourceStage;
+		VkPipelineStageFlags destinationStage;
+
+		if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
+		{
+			barrier.srcAccessMask = VK_ACCESS_NONE; // no access specified
+			barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+
+			sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT; // earliest part of the pipeline
+			destinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT; // pseudostage where a transfer happens (not a real pipeline stage) see [https://registry.khronos.org/vulkan/specs/1.3-extensions/html/chap7.html#VkPipelineStageFlagBits]
+		}
+		else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+		{
+			barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+			barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+			sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT; // earliest part of the pipeline
+			destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT; // pseudostage where a transfer happens (not a real pipeline stage)
+		}
+		else
+		{
+			QN_CORE_ASSERT(false, "Unsupported Layout Transition!");
+		}
+
+
+		vkCmdPipelineBarrier(
+			commandBuffer,
+			sourceStage, // pipeline stage the operations occur that should happen before the barrier.
+			destinationStage, // pipeline stage in which operations will wait on the barrier.
+			0,
+			0, nullptr,
+			0, nullptr,
+			1, &barrier
+		);
+
+		EndSingleTimeCommandBuffer(commandBuffer);
+	}
+
+	void Renderer2D::CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height)
+	{
+		VkCommandBuffer commandBuffer = CreateSingleTimeCommandBuffer();
+
+		// identify region for buffer to image copy
+		VkBufferImageCopy region{};
+		region.bufferOffset = 0;
+		region.bufferRowLength = 0;
+		region.bufferImageHeight = 0;
+
+		region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		region.imageSubresource.mipLevel = 0;
+		region.imageSubresource.baseArrayLayer = 0;
+		region.imageSubresource.layerCount = 1;
+
+		region.imageOffset = { 0, 0, 0 };
+		region.imageExtent = {
+			width,
+			height,
+			1
+		};
+
+		// VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL is optimal layout for destination transfer
+		// it's possible to specify an array of regions to copy several images to an image...
+		// maybe this can be useful for optimizing the generation of atlas mapping
+		vkCmdCopyBufferToImage(commandBuffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+
+		EndSingleTimeCommandBuffer(commandBuffer);
 	}
 
 	bool Renderer2D::CreateInstance()
@@ -358,34 +634,42 @@ namespace Quin { namespace Renderer2D
 		// create image view for all images
 		for (unsigned int i = 0; i < m_swapChainImageViews.size(); i++)
 		{
-			VkImageViewCreateInfo createInfo{};
-			createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-			createInfo.image = m_swapChainImages[i];
-			// treat images as 1D textures, 2D textures, 3D textures and cube maps
-			createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D; 
-			createInfo.format = swapChainImageFormat;
-			// can swizzle color channels around, leave as default
-			createInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
-			createInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
-			createInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
-			createInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
-
-			createInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-			createInfo.subresourceRange.baseMipLevel = 0; // no mipmapping for now
-			createInfo.subresourceRange.levelCount = 1;
-
-			// ----- FOR VR SUPPORT -----
-			// If you were working on a stereographic 3D application, 
-			// then you would create a swap chain with multiple layers. 
-			// You could then create multiple image views for each image 
-			// representing the views for the left and right eyes by 
-			// accessing different layers.
-			createInfo.subresourceRange.baseArrayLayer = 0;
-			createInfo.subresourceRange.layerCount = 1;
-		
-			QN_CORE_ASSERT(vkCreateImageView(m_device, &createInfo, nullptr, &m_swapChainImageViews[i]) == VK_SUCCESS, "Could not create Swap Chain Image View!");
+			m_swapChainImageViews[i] = CreateImageView(m_swapChainImages[i], swapChainImageFormat);
 		}
-		// need to setup framebuffer to use as render target
+	}
+
+	VkImageView Renderer2D::CreateImageView(VkImage image, VkFormat format)
+	{
+		VkImageViewCreateInfo createInfo{};
+		createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+		createInfo.image = image;
+		// treat images as 1D textures, 2D textures, 3D textures and cube maps
+		createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+		createInfo.format = format;
+		// can swizzle color channels around, leave as default
+		createInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+		createInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+		createInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+		createInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+
+		createInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		createInfo.subresourceRange.baseMipLevel = 0; // no mipmapping for now
+		createInfo.subresourceRange.levelCount = 1;
+
+		// ----- FOR VR SUPPORT -----
+		// If you were working on a stereographic 3D application, 
+		// then you would create a swap chain with multiple layers. 
+		// You could then create multiple image views for each image 
+		// representing the views for the left and right eyes by 
+		// accessing different layers.
+		createInfo.subresourceRange.baseArrayLayer = 0;
+		createInfo.subresourceRange.layerCount = 1;
+
+		VkImageView imageView;
+		QN_CORE_ASSERT(vkCreateImageView(m_device, &createInfo, nullptr, &imageView) == VK_SUCCESS, "Could not create Swap Chain Image View!");
+
+		// return copy of image view
+		return imageView; 
 	}
 
 	void Renderer2D::CreateDescriptorSetLayout()
@@ -398,11 +682,21 @@ namespace Quin { namespace Renderer2D
 		uboLayoutBinding.pImmutableSamplers = nullptr; // Optional, only relevant for image sampling descriptors
 		uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT; // use uniform in vertex shader 
 
+		// texture sampler layout binding
+		VkDescriptorSetLayoutBinding samplerLayoutBinding{};
+		samplerLayoutBinding.descriptorCount = 1;
+		samplerLayoutBinding.binding = 1;
+		samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+		samplerLayoutBinding.pImmutableSamplers = nullptr;
+
+		std::array<VkDescriptorSetLayoutBinding, 2> bindings = { uboLayoutBinding, samplerLayoutBinding };
+
 		// array of bindings (array can be useful for indexing into bones in a mesh)
 		VkDescriptorSetLayoutCreateInfo layoutInfo{};
 		layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-		layoutInfo.bindingCount = 1;
-		layoutInfo.pBindings = &uboLayoutBinding;
+		layoutInfo.bindingCount = (uint32_t)bindings.size();
+		layoutInfo.pBindings = bindings.data();
 
 		QN_CORE_ASSERT(vkCreateDescriptorSetLayout(m_device, &layoutInfo, nullptr, &m_descriptorSetLayout) == VK_SUCCESS, "Failed to create Descriptor Set Layout!");
 
@@ -746,14 +1040,16 @@ namespace Quin { namespace Renderer2D
 	// allocate memory for descriptor sets
 	void Renderer2D::CreateDescriptorPool()
 	{
-		VkDescriptorPoolSize poolSize{};
-		poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		poolSize.descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+		std::array<VkDescriptorPoolSize, 2> poolSizes{};
+		poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		poolSizes[0].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+		poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		poolSizes[1].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
 
 		VkDescriptorPoolCreateInfo poolInfo{};
 		poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-		poolInfo.pPoolSizes = &poolSize;
-		poolInfo.poolSizeCount = 1;
+		poolInfo.pPoolSizes = poolSizes.data();
+		poolInfo.poolSizeCount = (uint32_t)poolSizes.size();
 		poolInfo.maxSets = (uint32_t)MAX_FRAMES_IN_FLIGHT;
 
 		QN_CORE_ASSERT(vkCreateDescriptorPool(m_device, &poolInfo, nullptr, &m_descriptorPool) == VK_SUCCESS, "Failed to create Descriptor Pool!");
@@ -778,18 +1074,31 @@ namespace Quin { namespace Renderer2D
 			buffInfo.offset = 0;
 			buffInfo.range = sizeof(glm::mat4);
 
-			VkWriteDescriptorSet descriptorWrite{};
-			descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-			descriptorWrite.dstSet = m_descriptorSets[i];
-			descriptorWrite.dstBinding = 0;
-			descriptorWrite.dstArrayElement = 0; // indexing into descriptor set index
-			descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-			descriptorWrite.descriptorCount = 1;
-			descriptorWrite.pBufferInfo = &buffInfo;
-			descriptorWrite.pImageInfo = nullptr; // Optional
-			descriptorWrite.pTexelBufferView = nullptr; // Optional
+			VkDescriptorImageInfo imageInfo{};
+			imageInfo.imageView = m_textureImageView;
+			imageInfo.sampler = m_textureSampler;
+			imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
-			vkUpdateDescriptorSets(m_device, 1, &descriptorWrite, 0, nullptr);
+			std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
+			// buff info
+			descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+			descriptorWrites[0].dstSet = m_descriptorSets[i];
+			descriptorWrites[0].dstBinding = 0;
+			descriptorWrites[0].dstArrayElement = 0; // indexing into descriptor set index
+			descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+			descriptorWrites[0].descriptorCount = 1;
+			descriptorWrites[0].pBufferInfo = &buffInfo;
+
+			// imageInfo
+			descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+			descriptorWrites[1].dstSet = m_descriptorSets[i];
+			descriptorWrites[1].dstBinding = 1;
+			descriptorWrites[1].dstArrayElement = 0; // indexing into descriptor set index
+			descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+			descriptorWrites[1].descriptorCount = 1;
+			descriptorWrites[1].pImageInfo = &imageInfo; 
+
+			vkUpdateDescriptorSets(m_device, (uint32_t)descriptorWrites.size(), descriptorWrites.data(), 0, nullptr);
 		}
 	}
 
@@ -817,6 +1126,20 @@ namespace Quin { namespace Renderer2D
 	// in that case
 	void Renderer2D::CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
 	{
+		VkCommandBuffer commandBuffer = CreateSingleTimeCommandBuffer();
+
+		// create buffer copy region and copy buffer
+		VkBufferCopy bufCopy{};
+		bufCopy.size = size;
+		bufCopy.srcOffset = 0;
+		bufCopy.dstOffset = 0;
+		vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &bufCopy);
+		
+		EndSingleTimeCommandBuffer(commandBuffer);
+	}
+
+	VkCommandBuffer Renderer2D::CreateSingleTimeCommandBuffer()
+	{
 		// allocation info for command buffer
 		VkCommandBufferAllocateInfo allocInfo{};
 		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -834,12 +1157,11 @@ namespace Quin { namespace Renderer2D
 		bufInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT; // tell driver we'll use only once
 		vkBeginCommandBuffer(commandBuffer, &bufInfo);
 
-		// create buffer copy region and copy buffer
-		VkBufferCopy bufCopy{};
-		bufCopy.size = size;
-		bufCopy.srcOffset = 0;
-		bufCopy.dstOffset = 0;
-		vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &bufCopy);
+		return commandBuffer;
+	}
+
+	void Renderer2D::EndSingleTimeCommandBuffer(VkCommandBuffer commandBuffer)
+	{
 		vkEndCommandBuffer(commandBuffer);
 
 		VkSubmitInfo submitInfo{};
@@ -850,6 +1172,7 @@ namespace Quin { namespace Renderer2D
 		// could use a fence to optimize but this will do for now
 		vkQueueSubmit(m_graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
 		vkQueueWaitIdle(m_graphicsQueue);
+
 		vkFreeCommandBuffers(m_device, m_commandPool, 1, &commandBuffer);
 	}
 
@@ -1008,8 +1331,12 @@ namespace Quin { namespace Renderer2D
 			swapChainAdequate = !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
 		}
 
+		VkPhysicalDeviceFeatures supportedFeatures;
+		vkGetPhysicalDeviceFeatures(device, &supportedFeatures);
+
 		return deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU &&
-			deviceFeatures.geometryShader && indices.HasFamily() && extensionsSupported && swapChainAdequate;
+			deviceFeatures.geometryShader && indices.HasFamily() && extensionsSupported && swapChainAdequate &&
+			supportedFeatures.samplerAnisotropy;
 	}
 
 	QueueFamilyIndices Renderer2D::FindQueueFamilies(VkPhysicalDevice device)
@@ -1064,8 +1391,9 @@ namespace Quin { namespace Renderer2D
 			queueCreateInfos.push_back(queueCreateInfo);
 		}
 
-		// will start using this to create shaders and such
+		// setup device features
 		VkPhysicalDeviceFeatures deviceFeatures{};
+		deviceFeatures.samplerAnisotropy = VK_TRUE;
 
 		VkDeviceCreateInfo createInfo{};
 		createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
