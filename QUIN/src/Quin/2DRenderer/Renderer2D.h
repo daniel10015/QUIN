@@ -77,7 +77,7 @@ namespace Quin { namespace Renderer2D
 		// texture information
 		uint32_t MAX_TEXTURE_LENGTH;
 		unsigned char* m_texturePixels;
-		uint32_t m_texWidth, m_texHeight;
+		uint32_t m_texWidth, m_texHeight; // for all textures used (restrict all tex to 1 size)
 		VkDeviceSize m_textureImageSize;
 		// have as many uniform buffers as we have frames in flight
 		std::vector<VkBuffer> m_uniformBuffers;

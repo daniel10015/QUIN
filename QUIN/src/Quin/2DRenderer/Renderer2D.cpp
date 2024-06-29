@@ -238,9 +238,9 @@ namespace Quin { namespace Renderer2D
 		m_indices.push_back(startIndex + 2); // bottom right
 		m_indices.push_back(startIndex + 3); // bottom left
 
-		QN_CORE_TRACE("Quad added to batch: vertex size = {0} , indices size = {1}", m_vertexData.size(), m_indices.size());
+		//QN_CORE_TRACE("Quad added to batch: vertex size = {0} , indices size = {1}", m_vertexData.size(), m_indices.size());
 	
-		PRINT_QUAD_INFO
+		//PRINT_QUAD_INFO
 	}
 
 	// true: successfuly reads image
@@ -354,11 +354,11 @@ namespace Quin { namespace Renderer2D
 		// for starting out, use linear sampling and clamp texture to edge
 		VkSamplerCreateInfo samplerInfo{};
 		samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-		samplerInfo.magFilter = VK_FILTER_NEAREST; // good for pixel art
-		samplerInfo.minFilter = VK_FILTER_LINEAR; // good for regular art
-		samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
-		samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
-		samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
+		samplerInfo.magFilter = VK_FILTER_NEAREST; // good for pixel art, good for keeping pixels when zoomed-in
+		samplerInfo.minFilter = VK_FILTER_LINEAR; // good for regular art, good for keeping shape at distance
+		samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+		samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+		samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
 
 		// anisotropy limits the amount of texel samples that can be used to calculate the final color
 		samplerInfo.anisotropyEnable = VK_TRUE;
@@ -515,7 +515,7 @@ namespace Quin { namespace Renderer2D
 		appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
 		appInfo.pEngineName = "Quin Engine";
 		appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
-		appInfo.apiVersion = VK_API_VERSION_1_0;
+		appInfo.apiVersion = VK_API_VERSION_1_3; 
 
 		VkInstanceCreateInfo createInfo{};
 		createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
@@ -1299,7 +1299,7 @@ namespace Quin { namespace Renderer2D
 		// reading at the end of the file lets us determine the size so we can allocate it before hand
 		std::ifstream file(filename, std::ios::binary | std::ios::ate);
 
-		//PRINT_SYSTEM_PATH;
+		PRINT_SYSTEM_PATH;
 
 		QN_CORE_ASSERT(file.is_open(), "Failed to open shader file");
 

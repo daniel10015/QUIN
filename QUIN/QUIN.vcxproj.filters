@@ -7,6 +7,9 @@
     <Filter Include="Quin\2DRenderer">
       <UniqueIdentifier>{BE707C38-2AFC-E9FC-330D-6DF19F1746FD}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Quin\2DRenderer\Shaders">
+      <UniqueIdentifier>{97732C29-03AB-74C0-0CB5-D8E3786B9BB9}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Quin\Events">
       <UniqueIdentifier>{86F35C0D-F2A8-D502-7B9D-CFD9E751CC06}</UniqueIdentifier>
     </Filter>
@@ -111,12 +114,16 @@
     <ClCompile Include="src\Quin\qnpch.cpp">
       <Filter>Quin</Filter>
     </ClCompile>
-    <ClCompile Include="src\Quin\stb_image.cpp" />
+    <ClCompile Include="src\Quin\stb_image.cpp">
+      <Filter>Quin</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="src\Quin\2DRenderer\Shaders\frag.spv" />
-    <None Include="src\Quin\2DRenderer\Shaders\Shader.frag" />
-    <None Include="src\Quin\2DRenderer\Shaders\Shader.vert" />
-    <None Include="src\Quin\2DRenderer\Shaders\vert.spv" />
+    <None Include="src\Quin\2DRenderer\Shaders\Shader.frag">
+      <Filter>Quin\2DRenderer\Shaders</Filter>
+    </None>
+    <None Include="src\Quin\2DRenderer\Shaders\Shader.vert">
+      <Filter>Quin\2DRenderer\Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

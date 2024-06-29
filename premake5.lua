@@ -35,24 +35,6 @@ project "GLFW"
 		"QUIN/vendor/GLFW/src/null_joystick.c",
 		"QUIN/vendor/GLFW/src/window.c"
 	}
--- "QUIN\vendor\GLFW\src\cocoa_init.m"
--- "QUIN\vendor\GLFW\src\cocoa_joystick.h"
--- "QUIN\vendor\GLFW\src\cocoa_joystick.m"
--- "QUIN\vendor\GLFW\src\cocoa_monitor.m"
--- "QUIN\vendor\GLFW\src\cocoa_platform.h"
--- "QUIN\vendor\GLFW\src\cocoa_time.c"
--- "QUIN\vendor\GLFW\src\cocoa_time.h"
--- "QUIN\vendor\GLFW\src\cocoa_window.m"
--- "QUIN\vendor\GLFW\src\context.c"
--- "QUIN\vendor\GLFW\src\egl_context.c"
--- "QUIN\vendor\GLFW\src\glx_context.c"
--- "QUIN\vendor\GLFW\src\internal.h"
--- "QUIN\vendor\GLFW\src\linux_joystick.c"
--- "QUIN\vendor\GLFW\src\linux_joystick.h"
--- "QUIN\vendor\GLFW\src\mappings.h"
--- "QUIN\vendor\GLFW\src\mappings.h.in",
--- "QUIN\vendor\GLFW\src\monitor.c"
--- "QUIN\vendor\GLFW\src\nsgl_context.m"
 
 	libdirs { "/VulkanSDK/1.3.280.0/Lib/" }
 
@@ -119,7 +101,9 @@ project "QUIN"
 	files
 	{
 		"%{prj.name}/src/**.h",
-		"%{prj.name}/src/**.cpp"
+		"%{prj.name}/src/**.cpp",
+		"%{prj.name}/src/**.frag",
+		"%{prj.name}/src/**.vert"
 	}
 
 	includedirs
@@ -182,7 +166,9 @@ project "Sandbox"
 	files
 	{
 		"%{prj.name}/src/**.h",
-		"%{prj.name}/src/**.cpp"
+		"%{prj.name}/src/**.cpp",
+		"%{prj.name}/src/**.frag",
+		"%{prj.name}/src/**.vert"
 	}
 	
 	includedirs
@@ -205,6 +191,13 @@ project "Sandbox"
 		defines
 		{
 			"QN_PLATFORM_WINDOWS"
+		}
+
+		-- shader programs
+		buildmessage 'Compiling Shader Programs'
+		prebuildcommands 
+		{
+			"call CompileShaders.bat"
 		}
 
 	filter "configurations:Debug"

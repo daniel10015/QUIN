@@ -2,6 +2,7 @@
 
 #define CAMERA_ZOOM_FACTOR 0.05f
 #define CAMERA_ZOOM_FACTOR_DIFFERENTIAL CAMERA_ZOOM_FACTOR/2.0f
+#define SPRITE_DIMENSIONS 48
 
 SandboxLayer::SandboxLayer(void* window) : Layer("Sandbox2D")
 {
@@ -22,9 +23,27 @@ SandboxLayer::~SandboxLayer()
 
 void SandboxLayer::OnAttach()
 {
-	scene->AddTexture("Assets/Textures/Sprites/D_Walk.png", 18-12/2, 12+12, 15, 24); // configure parameters accordingly...
-	scene->DrawQuad(0.3, 0.3, 0.5, 0.3);
-	scene->DrawQuad(-0.75, -0.75, 0.25, 0.50);
+	QN_INFO("Sprite dimensions: {0}x{0}", SPRITE_DIMENSIONS);
+	// texture for D_Walk.png is {48 , 48} (w/h) luckily we won't need mipmapping for this specific case
+	// we'll target texture array (same size sprites) for pixel art, iff 2^n arises will do mipmapping
+	scene->AddTexture("Assets/Textures/Sprites/grass_1.png", 0, SPRITE_DIMENSIONS, 0, SPRITE_DIMENSIONS); // configure parameters accordingly...
+	// construct background quads
+	
+	// draw individual quads for each sprite (not using texture repeat)
+	/*
+	for (int i = 0; i < 5; i++)
+	{
+		for (int j = 0; j < 5; j++)
+		{
+			scene->DrawQuad(i, j, 1.0, 1.0); // Q1
+			scene->DrawQuad(-i - 1.0, j, 1.0, 1.0); // Q2
+			scene->DrawQuad(-i - 1.0, -j - 1.0, 1.0, 1.0); // Q3
+			scene->DrawQuad(i, -j - 1.0, 1.0, 1.0); // Q4
+		}
+	}
+	*/
+	// draw one large quad with repeated texture
+	scene->DrawQuad(-5.0, -5.0, 10.0, 10.0, { 0.0,0.0,0.0,0.0 }, {0.0,0.0,10.0,10.0});
 	scene->InitializeRenderer();
 }
 

@@ -87,10 +87,16 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
+    <CustomBuildStep>
+      <Message>Compiling Shader Programs</Message>
+    </CustomBuildStep>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <PreBuildEvent>
+      <Command>call CompileShaders.bat</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -108,11 +114,17 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
+    <CustomBuildStep>
+      <Message>Compiling Shader Programs</Message>
+    </CustomBuildStep>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
+    <PreBuildEvent>
+      <Command>call CompileShaders.bat</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dist|x64'">
     <ClCompile>
@@ -130,11 +142,17 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
+    <CustomBuildStep>
+      <Message>Compiling Shader Programs</Message>
+    </CustomBuildStep>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
+    <PreBuildEvent>
+      <Command>call CompileShaders.bat</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="src\Sandbox2D.h" />
@@ -149,15 +167,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="Assets\Textures\Sprites\D_Attack.png" />
-    <Image Include="Assets\Textures\Sprites\D_Death.png" />
-    <Image Include="Assets\Textures\Sprites\D_Walk.png" />
-    <Image Include="Assets\Textures\Sprites\S_Attack.png" />
-    <Image Include="Assets\Textures\Sprites\S_Death.png" />
-    <Image Include="Assets\Textures\Sprites\S_Walk.png" />
-    <Image Include="Assets\Textures\Sprites\U_Attack.png" />
-    <Image Include="Assets\Textures\Sprites\U_Death.png" />
-    <Image Include="Assets\Textures\Sprites\U_Walk.png" />
+    <None Include="CompileShaders.bat" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
