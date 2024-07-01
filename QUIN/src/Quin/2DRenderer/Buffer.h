@@ -6,6 +6,7 @@ struct vertex2D
 	glm::vec2 position;
 	glm::vec4 color;
 	glm::vec2 texCoord;
+	float textureSerial;
 
 	static VkVertexInputBindingDescription getBindingDescription() 
 	{
@@ -18,9 +19,9 @@ struct vertex2D
 		return bindingDescription;
 	}
 
-	static std::array<VkVertexInputAttributeDescription, 3> getAttributeDescriptions() 
+	static std::array<VkVertexInputAttributeDescription, 4> getAttributeDescriptions() 
 	{
-		std::array<VkVertexInputAttributeDescription, 3> attributeDescriptions{};
+		std::array<VkVertexInputAttributeDescription, 4> attributeDescriptions{};
 		// position data format
 		attributeDescriptions[0].binding = 0;
 		attributeDescriptions[0].location = 0;
@@ -38,6 +39,12 @@ struct vertex2D
 		attributeDescriptions[2].location = 2;
 		attributeDescriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
 		attributeDescriptions[2].offset = offsetof(vertex2D, texCoord);
+
+		// texture data format
+		attributeDescriptions[3].binding = 0;
+		attributeDescriptions[3].location = 3;
+		attributeDescriptions[3].format = VK_FORMAT_R32_SFLOAT;
+		attributeDescriptions[3].offset = offsetof(vertex2D, textureSerial);
 
 		return attributeDescriptions;
 	}

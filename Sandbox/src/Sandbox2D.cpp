@@ -3,6 +3,8 @@
 #define CAMERA_ZOOM_FACTOR 0.05f
 #define CAMERA_ZOOM_FACTOR_DIFFERENTIAL CAMERA_ZOOM_FACTOR/2.0f
 #define SPRITE_DIMENSIONS 48
+#define ZERO_COLOR { 0.0,0.0,0.0,0.0 }
+#define REGULAR_TEXCORD {0.0,0.0,1.0,1.0}
 
 SandboxLayer::SandboxLayer(void* window) : Layer("Sandbox2D")
 {
@@ -26,7 +28,10 @@ void SandboxLayer::OnAttach()
 	QN_INFO("Sprite dimensions: {0}x{0}", SPRITE_DIMENSIONS);
 	// texture for D_Walk.png is {48 , 48} (w/h) luckily we won't need mipmapping for this specific case
 	// we'll target texture array (same size sprites) for pixel art, iff 2^n arises will do mipmapping
-	scene->AddTexture("Assets/Textures/Sprites/grass_1.png", 0, SPRITE_DIMENSIONS, 0, SPRITE_DIMENSIONS); // configure parameters accordingly...
+	grass_1Serial = scene->AddTexture("Assets/Textures/Sprites/grass_1.png", 0, SPRITE_DIMENSIONS, 0, SPRITE_DIMENSIONS); // configure parameters accordingly...
+	D_WalkSerial = scene->AddTexture("Assets/Textures/Sprites/D_Walk.png", 0, SPRITE_DIMENSIONS, 0, SPRITE_DIMENSIONS);
+	QN_INFO("Grass Serial: {0}", grass_1Serial);
+	QN_INFO("Walk Serial:  {0}", D_WalkSerial);
 	// construct background quads
 	
 	// draw individual quads for each sprite (not using texture repeat)
@@ -43,7 +48,8 @@ void SandboxLayer::OnAttach()
 	}
 	*/
 	// draw one large quad with repeated texture
-	scene->DrawQuad(-5.0, -5.0, 10.0, 10.0, { 0.0,0.0,0.0,0.0 }, {0.0,0.0,10.0,10.0});
+	scene->DrawQuad(-5.0, -5.0, 10.0, 10.0, { 0.0,0.0,0.0,0.0 }, {0.0,0.0,1.0,1.0}, grass_1Serial);
+	scene->DrawQuad(-1.0, -1.0, 2.0, 2.0, ZERO_COLOR, REGULAR_TEXCORD, D_WalkSerial);
 	scene->InitializeRenderer();
 }
 

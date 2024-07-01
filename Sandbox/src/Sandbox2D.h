@@ -17,6 +17,9 @@ private:
 	Quin::Renderer2D::Scene2D* scene;
 // application variables
 private:
+	// later we will change these to be more flexible but for now hard-coded
+	float grass_1Serial;
+	float D_WalkSerial;
 	glm::vec2 m_mouseCoordinates = { 0.0f, 0.0f };
 	bool m_mousePress = false;
 	// camera space is MxN (20x20)

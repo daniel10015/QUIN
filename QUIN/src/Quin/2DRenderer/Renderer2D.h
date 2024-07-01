@@ -22,7 +22,9 @@ namespace Quin { namespace Renderer2D
 		std::vector<VkPresentModeKHR> presentModes;
 	};
 
-	// singleton
+	// singleton, will make the Vulkan API class static when the 3D rendering API gets built out
+	// also, static API will be useful when building out more layers (game, game-UI, Debug)
+	// So, for N layers there be at least N draw calls 
 	class QUIN_API Renderer2D
 	{
 	public:
@@ -33,9 +35,9 @@ namespace Quin { namespace Renderer2D
 		void DrawFrame();
 		void SetModelViewProjectionMatrix(const glm::mat4& mvpm);
 		void InitializeModelViewProjectionMatrix(const glm::mat4& mvpm);
-		void AddQuadToBatch(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color, const glm::mat2& texCoords);
+		void AddQuadToBatch(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color, const glm::mat2& texCoords, const float serial = 0);
 		bool InitVulkan();
-		bool AddTextureImage(const std::string& path, unsigned int width_offset = 0, unsigned int width = 0, unsigned int height_offset = 0, unsigned int height = 0);
+		float AddTextureImage(const std::string& path, unsigned int width_offset = 0, unsigned int width = 0, unsigned int height_offset = 0, unsigned int height = 0);
 		// variables
 	private:
 		bool vulkanInitialized = false;
@@ -76,8 +78,8 @@ namespace Quin { namespace Renderer2D
 		VkSampler m_textureSampler;
 		// texture information
 		uint32_t MAX_TEXTURE_LENGTH;
-		unsigned char* m_texturePixels;
-		uint32_t m_texWidth, m_texHeight; // for all textures used (restrict all tex to 1 size)
+		std::vector<unsigned char*> m_texturePixelsArray;
+		uint32_t m_texWidth, m_texHeight; // for all textures used (restrict all tex to 1 size, for now)
 		VkDeviceSize m_textureImageSize;
 		// have as many uniform buffers as we have frames in flight
 		std::vector<VkBuffer> m_uniformBuffers;
@@ -136,7 +138,7 @@ namespace Quin { namespace Renderer2D
 		VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
 		void CreateSwapChain();
 		void CreateImageViews();
-		VkImageView CreateImageView(VkImage image, VkFormat format);
+		VkImageView CreateImageView(VkImage image, VkFormat format, VkImageViewType viewType, uint32_t layerCount);
 	// rendering pipeline
 	private: // temporary, going to change soon!
 		void CreateDescriptorSetLayout();
@@ -164,7 +166,7 @@ namespace Quin { namespace Renderer2D
 		void CreateTextureSampler();
 		void CreateImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
 		void TransitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
-		void CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
+		void CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height, const uint32_t layerCount);
 private:
 		void RecreateSwapChain();
 		void CleanupSwapChain();
