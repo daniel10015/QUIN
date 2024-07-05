@@ -171,6 +171,7 @@
     <ClInclude Include="src\Quin\Events\Event.h" />
     <ClInclude Include="src\Quin\Events\KeyboardEvent.h" />
     <ClInclude Include="src\Quin\Events\MouseEvent.h" />
+    <ClInclude Include="src\Quin\Keycodes.h" />
     <ClInclude Include="src\Quin\Layer.h" />
     <ClInclude Include="src\Quin\LayerStack.h" />
     <ClInclude Include="src\Quin\Log.h" />

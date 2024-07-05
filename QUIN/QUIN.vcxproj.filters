@@ -82,6 +82,7 @@
     <ClInclude Include="src\Quin\qnpch.h">
       <Filter>Quin</Filter>
     </ClInclude>
+    <ClInclude Include="src\Quin\Keycodes.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Quin\2DRenderer\Camera.cpp">

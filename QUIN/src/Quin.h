@@ -5,9 +5,11 @@
 
 // --- for application use only
 // ----------------------------
+// utils
 #include "Quin/Application.h"
 #include "Quin/Log.h"
 #include "Quin/Timer.h"
+#include "Quin/Keycodes.h"
 // layer
 #include <Quin/Layer.h>
 #include <Quin/Events/Event.h>
