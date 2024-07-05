@@ -828,13 +828,13 @@ namespace Quin { namespace Renderer2D
 		// setup depth and stencil testing later
 
 		// color blending: for now don't blend
-		VkPipelineColorBlendAttachmentState colorBlendAttachment{};
-		colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-		colorBlendAttachment.blendEnable = VK_FALSE;
+		VkPipelineColorBlendAttachmentState colorBlendAttachment = EnableAlphaBlending();
+		//colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+		//colorBlendAttachment.blendEnable = VK_FALSE;
 
 		VkPipelineColorBlendStateCreateInfo colorBlending{};
 		colorBlending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
-		colorBlending.logicOpEnable = VK_FALSE;
+		colorBlending.logicOpEnable = VK_FALSE; // don't use bitwise
 		colorBlending.logicOp = VK_LOGIC_OP_COPY;
 		colorBlending.attachmentCount = 1;
 		colorBlending.pAttachments = &colorBlendAttachment;
@@ -890,6 +890,21 @@ namespace Quin { namespace Renderer2D
 
 		vkDestroyShaderModule(m_device, vertShaderModule, nullptr);
 		vkDestroyShaderModule(m_device, fragShaderModule, nullptr);
+	}
+
+	VkPipelineColorBlendAttachmentState Renderer2D::EnableAlphaBlending()
+	{
+		VkPipelineColorBlendAttachmentState colorBlend{};
+		colorBlend.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+		colorBlend.blendEnable = VK_TRUE;
+		colorBlend.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+		colorBlend.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+		colorBlend.colorBlendOp = VK_BLEND_OP_ADD;
+		colorBlend.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+		colorBlend.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+		colorBlend.alphaBlendOp = VK_BLEND_OP_ADD;
+		
+		return colorBlend;
 	}
 
 	void Renderer2D::CreateRenderPass()

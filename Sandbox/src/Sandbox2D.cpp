@@ -48,7 +48,7 @@ void SandboxLayer::OnAttach()
 	}
 	*/
 	// draw one large quad with repeated texture
-	scene->DrawQuad(-5.0, -5.0, 10.0, 10.0, { 0.0,0.0,0.0,0.0 }, {0.0,0.0,1.0,1.0}, grass_1Serial);
+	scene->DrawQuad(-5.0, -5.0, 10.0, 10.0, { 0.0,0.0,0.0,0.0 }, {0.0,0.0,10.0,10.0}, grass_1Serial);
 	scene->DrawQuad(-1.0, -1.0, 2.0, 2.0, ZERO_COLOR, REGULAR_TEXCORD, D_WalkSerial);
 	scene->InitializeRenderer();
 }
@@ -60,6 +60,7 @@ void SandboxLayer::OnDetach()
 
 void SandboxLayer::OnUpdate()
 {
+	// TODO: implement position uniform in the shader for all quads 
 	scene->RenderFrame();
 }
 

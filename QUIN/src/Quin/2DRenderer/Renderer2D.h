@@ -145,6 +145,7 @@ namespace Quin { namespace Renderer2D
 		void CreateGraphicsPipeline();
 		VkShaderModule CreateShaderModule(const std::vector<char>& code);
 		void CreateRenderPass();
+		VkPipelineColorBlendAttachmentState EnableAlphaBlending();
 		// frame/vertex buffers
 		void CreateFrameBuffers();
 		void CreateVertexBuffer();
