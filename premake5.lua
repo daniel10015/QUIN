@@ -103,7 +103,8 @@ project "QUIN"
 		"%{prj.name}/src/**.h",
 		"%{prj.name}/src/**.cpp",
 		"%{prj.name}/src/**.frag",
-		"%{prj.name}/src/**.vert"
+		"%{prj.name}/src/**.vert",
+		"%{prj.name}**.json"
 	}
 
 	includedirs
@@ -169,7 +170,10 @@ project "Sandbox"
 		"%{prj.name}/src/**.h",
 		"%{prj.name}/src/**.cpp",
 		"%{prj.name}/src/**.frag",
-		"%{prj.name}/src/**.vert"
+		"%{prj.name}/src/**.vert",
+		"%{prj.name}/Assets/**.json",
+		"%{prj.name}/Assets/**.png",
+		"%{prj.name}/**.bat",
 	}
 	
 	includedirs

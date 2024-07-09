@@ -1,43 +1,77 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Source Files">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    <Filter Include="Assets">
+      <UniqueIdentifier>{3824E0A7-24C6-0A7E-0D81-1ED2F9C191CE}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    <Filter Include="Assets\Data">
+      <UniqueIdentifier>{A1FCB013-0DB2-2909-96A6-23E0025B200D}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Resource Files">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    <Filter Include="Assets\Textures">
+      <UniqueIdentifier>{0B35254A-77C0-920E-80D1-1503ECDBEE0E}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Assets\Textures\Sprites">
+      <UniqueIdentifier>{8416A7C6-F04D-EF5D-F957-5381650E1657}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src">
+      <UniqueIdentifier>{2DAB880B-99B4-887C-2230-9F7C8E38947C}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\SandboxApplication.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Sandbox2D.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
+    <ClInclude Include="src\DataHandler.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="src\Sandbox2D.h">
-      <Filter>Header Files</Filter>
+      <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="CompileShaders.bat">
-      <Filter>Source Files</Filter>
-    </None>
+    <ClCompile Include="src\DataHandler.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Sandbox2D.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\SandboxApplication.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <None Include="Assets\Data\VertexData.json">
+      <Filter>Assets\Data</Filter>
+    </None>
+    <None Include="CompileShaders.bat" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Assets\Textures\Sprites\D_Attack.png">
+      <Filter>Assets\Textures\Sprites</Filter>
+    </Image>
+    <Image Include="Assets\Textures\Sprites\D_Death.png">
+      <Filter>Assets\Textures\Sprites</Filter>
+    </Image>
     <Image Include="Assets\Textures\Sprites\D_Walk.png">
-      <Filter>Resource Files</Filter>
+      <Filter>Assets\Textures\Sprites</Filter>
+    </Image>
+    <Image Include="Assets\Textures\Sprites\S_Attack.png">
+      <Filter>Assets\Textures\Sprites</Filter>
+    </Image>
+    <Image Include="Assets\Textures\Sprites\S_Death.png">
+      <Filter>Assets\Textures\Sprites</Filter>
+    </Image>
+    <Image Include="Assets\Textures\Sprites\S_Walk.png">
+      <Filter>Assets\Textures\Sprites</Filter>
+    </Image>
+    <Image Include="Assets\Textures\Sprites\U_Attack.png">
+      <Filter>Assets\Textures\Sprites</Filter>
+    </Image>
+    <Image Include="Assets\Textures\Sprites\U_Death.png">
+      <Filter>Assets\Textures\Sprites</Filter>
+    </Image>
+    <Image Include="Assets\Textures\Sprites\U_Walk.png">
+      <Filter>Assets\Textures\Sprites</Filter>
     </Image>
     <Image Include="Assets\Textures\Sprites\grass_1.png">
-      <Filter>Resource Files</Filter>
+      <Filter>Assets\Textures\Sprites</Filter>
     </Image>
   </ItemGroup>
 </Project>
