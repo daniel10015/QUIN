@@ -1,5 +1,7 @@
 #pragma once
 #include <Quin.h>
+#include <unordered_map>
+#include "DataHandler.h"
 
 class SandboxLayer : public Quin::Layer
 {
@@ -18,10 +20,10 @@ private:
 // application variables
 private:
 	// later we will change these to be more flexible but for now hard-coded
-	float grass_1Serial;
-	float D_WalkSerial;
+	std::vector<vertex_data2D>* m_vertex_data;
+	std::unordered_map < std::string, std::vector<size_t> > m_texturesToIdxs;
+
 	glm::vec2 m_mouseCoordinates = { 0.0f, 0.0f };
-	bool m_mousePress = false;
 	// camera space is MxN (20x20)
 	glm::vec2 m_cameraView = { 8.0f, 8.0f };
 
@@ -43,8 +45,17 @@ private:
 	Quin::timer application_time;
 // event handlers
 private:
+	// MOUSE EVENTS
 	bool MousePressedEvent(const Quin::MousePressedEvent&);
 	bool MouseReleasedEvent(const Quin::MouseReleasedEvent&);
 	bool MouseMovedEvent(const Quin::MouseMoveEvent&); 
 	bool MouseScrollEvent(const Quin::MouseScrollEvent&);
+
+	// KEYBOARD EVENTS
+	bool KeyPressedEvent(const Quin::KeyPressedEvent&);
+	bool KeyReleasedEvent(const Quin::KeyReleasedEvent&);
+// keypress states (turn it into a static array later
+private:
+	bool m_mousePress = false;
+	bool m_leftctrl = false;
 };

@@ -1,4 +1,5 @@
 #include "Sandbox2D.h"
+#include "DataHandler.h"
 
 #define CAMERA_ZOOM_FACTOR 0.05f
 #define CAMERA_ZOOM_FACTOR_DIFFERENTIAL CAMERA_ZOOM_FACTOR/2.0f
@@ -16,6 +17,15 @@ SandboxLayer::SandboxLayer(void* window) : Layer("Sandbox2D")
 	float down =   m_cameraView[1]/2 - m_cameraView[1];
 
 	scene = new Quin::Renderer2D::Scene2D(window, left, right, up, down);
+
+	// load vertex data
+	m_vertex_data = GetVertexData("Assets/Data/VertexData.json");
+	size_t idx = 0;
+	for (auto vertex : *m_vertex_data)
+	{
+		m_texturesToIdxs[vertex.textureName].push_back(idx);
+		idx++;
+	}
 }
 
 SandboxLayer::~SandboxLayer() 
@@ -25,13 +35,24 @@ SandboxLayer::~SandboxLayer()
 
 void SandboxLayer::OnAttach()
 {
+	std::cout << "TEST\n\n\n\n\n";
+	QN_TRACE("lctrl keycode: {0}", static_cast<uint16_t>(Quin::Key::LeftControl));
+	QN_TRACE("R keycode: {0}", static_cast<uint16_t>(Quin::Key::R));
+
+
 	QN_INFO("Sprite dimensions: {0}x{0}", SPRITE_DIMENSIONS);
 	// texture for D_Walk.png is {48 , 48} (w/h) luckily we won't need mipmapping for this specific case
 	// we'll target texture array (same size sprites) for pixel art, iff 2^n arises will do mipmapping
-	grass_1Serial = scene->AddTexture("Assets/Textures/Sprites/grass_1.png", 0, SPRITE_DIMENSIONS, 0, SPRITE_DIMENSIONS); // configure parameters accordingly...
-	D_WalkSerial = scene->AddTexture("Assets/Textures/Sprites/D_Walk.png", 0, SPRITE_DIMENSIONS, 0, SPRITE_DIMENSIONS);
-	QN_INFO("Grass Serial: {0}", grass_1Serial);
-	QN_INFO("Walk Serial:  {0}", D_WalkSerial);
+	for (std::pair<std::string, std::vector<size_t>> texture : m_texturesToIdxs)
+	{
+		float render_id = scene->AddTexture(texture.first, 0, SPRITE_DIMENSIONS, 0, SPRITE_DIMENSIONS);
+		QN_INFO("render_id for {0}: {1}", texture.first, render_id);
+		// add render IDs to all sprites for this texture
+		for (auto idx : texture.second)
+		{
+			(*m_vertex_data)[idx].render_id = render_id;
+		}
+	}
 	// construct background quads
 	
 	// draw individual quads for each sprite (not using texture repeat)
@@ -48,14 +69,18 @@ void SandboxLayer::OnAttach()
 	}
 	*/
 	// draw one large quad with repeated texture
-	scene->DrawQuad(-5.0, -5.0, 10.0, 10.0, { 0.0,0.0,0.0,0.0 }, {0.0,0.0,10.0,10.0}, grass_1Serial);
-	scene->DrawQuad(-1.0, -1.0, 2.0, 2.0, ZERO_COLOR, REGULAR_TEXCORD, D_WalkSerial);
+	for (auto quad : *m_vertex_data)
+	{
+		scene->DrawQuad(quad.position[0], quad.position[1], quad.dimensions[0], quad.dimensions[1],
+			quad.color, quad.textureDimensions, quad.render_id);
+	}
 	scene->InitializeRenderer();
 }
 
 void SandboxLayer::OnDetach()
 {
-
+	if(!m_vertex_data)
+		delete m_vertex_data;
 }
 
 void SandboxLayer::OnUpdate()
@@ -69,11 +94,15 @@ void SandboxLayer::OnEvent(Quin::Event& event)
 	application_time.start();
 	Quin::EventDispatch dispatcher(event);
 
+	// mouse events
 	dispatcher.Dispatch<Quin::MousePressedEvent>(BIND_FUNC(SandboxLayer::MousePressedEvent));
 	dispatcher.Dispatch<Quin::MouseReleasedEvent>(BIND_FUNC(SandboxLayer::MouseReleasedEvent));
 	dispatcher.Dispatch<Quin::MouseMoveEvent>(BIND_FUNC(SandboxLayer::MouseMovedEvent));
-
 	dispatcher.Dispatch<Quin::MouseScrollEvent>(BIND_FUNC(SandboxLayer::MouseScrollEvent));
+
+	// keyboard events
+	dispatcher.Dispatch<Quin::KeyPressedEvent>(BIND_FUNC(SandboxLayer::KeyPressedEvent));
+	dispatcher.Dispatch<Quin::KeyReleasedEvent>(BIND_FUNC(SandboxLayer::KeyReleasedEvent));
 
 	//event.handled = true;
 }
@@ -127,6 +156,68 @@ bool SandboxLayer::MouseScrollEvent(const Quin::MouseScrollEvent& event)
 	QN_TRACE("camera view: ({0},{1})", m_cameraView[0], m_cameraView[1]);
 
 	RecomputeWindowToWorld();
+
+	return true;
+}
+
+bool SandboxLayer::KeyPressedEvent(const Quin::KeyPressedEvent& event) 
+{
+	uint16_t keycode = event.GetKeyCode();
+	//QN_TRACE("Keycode {0}", keycode);
+	m_leftctrl |= keycode == Quin::Key::LeftControl;
+
+	// restart renderer
+	if (m_leftctrl && keycode == Quin::Key::R)
+	{
+		QN_INFO("Restarting Renderer...");
+		scene->DestroyRenderer(true); //  destroy and recreate rendering object
+
+		// maybe reupdate something... not sure yet i think ill want to read in data from 
+		// a file that gets updated here when the renderer restarts? Honestly not sure
+		// if I want to do dynamic batching with some uniform buffer array (for few dynamic) or
+		// if I'd prefer to rebind the vertex buffer every single draw call...
+		// I think I will:
+		// 1. make a function to rebind vertex buffer (so it can be dynamic) 
+		// 2. MAYBE allocate a unfiorm buffer for some position movements but I reckon this would be
+		//		rather niche and would mostly be useful if rebinding becomes a bottleneck... I'll
+		//		stick to the former for now, while optimization is key this heavily restricts API possibilities
+		
+		// should call a fuction that reads from the same file that gets read at startup
+		// this is, just restart the renderer (so we can make changes to scene at runtime)
+
+		delete m_vertex_data; // deallocate current vertex data, so new one will get added
+		m_vertex_data = GetVertexData("Assets/Data/VertexData.json"); // get data again
+		// push data function
+
+		// push textures and associate texture IDs to quads
+		for (std::pair<std::string, std::vector<size_t>> texture : m_texturesToIdxs)
+		{
+			float render_id = scene->AddTexture(texture.first, 0, SPRITE_DIMENSIONS, 0, SPRITE_DIMENSIONS);
+			QN_INFO("render_id for {0}: {1}", texture.first, render_id);
+			// add render IDs to all sprites for this texture
+			for (auto idx : texture.second)
+			{
+				(*m_vertex_data)[idx].render_id = render_id;
+			}
+		}
+
+		// push quads
+		for (auto &quad : *m_vertex_data)
+		{
+			scene->DrawQuad(quad.position[0], quad.position[1], quad.dimensions[0], quad.dimensions[1],
+				quad.color, quad.textureDimensions, quad.render_id);
+		}
+
+		scene->InitializeRenderer(); // initialize
+	}
+
+	return true;
+}
+bool SandboxLayer::KeyReleasedEvent(const Quin::KeyReleasedEvent& event)
+{
+	uint16_t keycode = event.GetKeyCode();
+	m_leftctrl &= keycode != Quin::Key::LeftControl; // set FALSE unless not event and already true
+	//QN_TRACE("Keycode {0}", keycode);
 
 	return true;
 }

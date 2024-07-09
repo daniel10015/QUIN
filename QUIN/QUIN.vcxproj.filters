@@ -58,6 +58,9 @@
     <ClInclude Include="src\Quin\Events\MouseEvent.h">
       <Filter>Quin\Events</Filter>
     </ClInclude>
+    <ClInclude Include="src\Quin\Keycodes.h">
+      <Filter>Quin</Filter>
+    </ClInclude>
     <ClInclude Include="src\Quin\Layer.h">
       <Filter>Quin</Filter>
     </ClInclude>
@@ -79,10 +82,12 @@
     <ClInclude Include="src\Quin\core.h">
       <Filter>Quin</Filter>
     </ClInclude>
+    <ClInclude Include="src\Quin\json_parser.h">
+      <Filter>Quin</Filter>
+    </ClInclude>
     <ClInclude Include="src\Quin\qnpch.h">
       <Filter>Quin</Filter>
     </ClInclude>
-    <ClInclude Include="src\Quin\Keycodes.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Quin\2DRenderer\Camera.cpp">

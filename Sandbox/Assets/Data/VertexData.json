@@ -1,0 +1,80 @@
+[
+  {
+    "id": 1,
+    "position": [
+      -10.0,
+      -10.0
+    ],
+    "size": [
+      20.0,
+      20.0
+    ],
+    "texture": "Assets/Textures/Sprites/grass_1.png",
+    "textureDimensions": [
+      0.0,
+      0.0,
+      10.0,
+      10.0
+    ],
+    "color": [
+      255.0,
+      255.0,
+      255.0,
+      255.0
+    ],
+    "rotation": 0.0,
+    "layer": 0
+  },
+  {
+    "id": 2,
+    "position": [
+      3.0,
+      3.0
+    ],
+    "size": [
+      2.0,
+      2.0
+    ],
+    "texture": "Assets/Textures/Sprites/D_Walk.png",
+    "textureDimensions": [
+      0.0,
+      0.0,
+      1.0,
+      1.0
+    ],
+    "color": [
+      255.0,
+      255.0,
+      255.0,
+      255.0
+    ],
+    "rotation": 45.0,
+    "layer": 1
+  },
+  {
+    "id": 3,
+    "position": [
+      -3.0,
+      -8.0
+    ],
+    "size": [
+      5.0,
+      5.0
+    ],
+    "texture": "Assets/Textures/Sprites/S_Walk.png",
+    "textureDimensions": [
+      0.0,
+      0.0,
+      1.0,
+      1.0
+    ],
+    "color": [
+      255.0,
+      255.0,
+      255.0,
+      255.0
+    ],
+    "rotation": 90.0,
+    "layer": 2
+  }
+]

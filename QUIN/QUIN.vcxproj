@@ -80,7 +80,7 @@
       <PrecompiledHeaderFile>qnpch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>QN_PLATFORM_WINDOWS;QN_BUILD_DLL;QN_ENABLE_ASSERTS;QN_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>src;src\Quin;vendor\spdlog\include;vendor\GLFW\include;vendor\stb;\VulkanSDK\1.3.280.0\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>src;src\Quin;vendor\spdlog\include;vendor\GLFW\include;vendor\stb;vendor\json\include;\VulkanSDK\1.3.280.0\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -105,7 +105,7 @@
       <PrecompiledHeaderFile>qnpch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>QN_PLATFORM_WINDOWS;QN_BUILD_DLL;QN_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>src;src\Quin;vendor\spdlog\include;vendor\GLFW\include;vendor\stb;\VulkanSDK\1.3.280.0\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>src;src\Quin;vendor\spdlog\include;vendor\GLFW\include;vendor\stb;vendor\json\include;\VulkanSDK\1.3.280.0\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -134,7 +134,7 @@
       <PrecompiledHeaderFile>qnpch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>QN_PLATFORM_WINDOWS;QN_BUILD_DLL;QN_DIST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>src;src\Quin;vendor\spdlog\include;vendor\GLFW\include;vendor\stb;\VulkanSDK\1.3.280.0\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>src;src\Quin;vendor\spdlog\include;vendor\GLFW\include;vendor\stb;vendor\json\include;\VulkanSDK\1.3.280.0\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -179,6 +179,7 @@
     <ClInclude Include="src\Quin\Timer.h" />
     <ClInclude Include="src\Quin\Window.h" />
     <ClInclude Include="src\Quin\core.h" />
+    <ClInclude Include="src\Quin\json_parser.h" />
     <ClInclude Include="src\Quin\qnpch.h" />
   </ItemGroup>
   <ItemGroup>

@@ -9,12 +9,12 @@ namespace Quin
 	class QUIN_API KeyEvent : public Event
 	{
 	public:
-		int GetKeyCode() const { return m_keycode; }
+		uint16_t GetKeyCode() const { return m_keycode; }
 		CLASS_CATEGORY_EVENT( EventCategoryKeyboard | EventCategoryInput )
 	protected:
 		KeyEvent(int keycode) : m_keycode(keycode) {}
 
-		int m_keycode;
+		uint16_t m_keycode;
 	};
 
 	class QUIN_API KeyPressedEvent : public KeyEvent

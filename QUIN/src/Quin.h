@@ -10,6 +10,7 @@
 #include "Quin/Log.h"
 #include "Quin/Timer.h"
 #include "Quin/Keycodes.h"
+#include "Quin/json_parser.h"
 // layer
 #include <Quin/Layer.h>
 #include <Quin/Events/Event.h>

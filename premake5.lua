@@ -113,6 +113,7 @@ project "QUIN"
 		"%{prj.name}/vendor/spdlog/include",
 		"%{prj.name}/vendor/GLFW/include",
 		"%{prj.name}/vendor/stb",
+		"%{prj.name}/vendor/json/include",
 		"/VulkanSDK/1.3.280.0/Include"
 	}
 
@@ -174,6 +175,7 @@ project "Sandbox"
 	includedirs
 	{
 		"QUIN/vendor/spdlog/include",
+		"QUIN/vendor/json/include",
 		"QUIN/src",
 		"/VulkanSDK/1.3.280.0/Include"
 	}
