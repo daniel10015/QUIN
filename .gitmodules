@@ -7,3 +7,6 @@
 [submodule "QUIN/vendor/stb"]
 	path = QUIN/vendor/stb
 	url = https://github.com/nothings/stb.git
+[submodule "QUIN/vendor/json"]
+	path = QUIN/vendor/json
+	url = https://github.com/nlohmann/json.git
