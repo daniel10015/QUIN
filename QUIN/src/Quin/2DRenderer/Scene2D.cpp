@@ -35,6 +35,15 @@ namespace Quin { namespace Renderer2D
 		if (recreate)
 		{
 			m_renderer = new Renderer2D(m_window); // recreate render object
+			// if camera exists then add camera, else print warning
+			if (m_camera != nullptr)
+			{
+				m_renderer->InitializeModelViewProjectionMatrix(m_camera->GetProjectionViewMatrix());
+			}
+			else
+			{
+				QN_CORE_WARN("Camera doesn't exist, initial frame does not have camera");
+			}
 		}
 	}
 

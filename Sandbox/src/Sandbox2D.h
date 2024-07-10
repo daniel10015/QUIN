@@ -54,8 +54,8 @@ private:
 	// KEYBOARD EVENTS
 	bool KeyPressedEvent(const Quin::KeyPressedEvent&);
 	bool KeyReleasedEvent(const Quin::KeyReleasedEvent&);
-// keypress states (turn it into a static array later
+// states
 private:
+	std::array< unsigned char, GetKeycodeArraySize() > m_keyStates; // bit defined
 	bool m_mousePress = false;
-	bool m_leftctrl = false;
 };

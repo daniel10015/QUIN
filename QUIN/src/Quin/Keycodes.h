@@ -12,6 +12,8 @@ namespace Quin
 		// these keycodes can be used throughout the program and will be the exact same per glfw
 		enum : uint16_t
 		{
+
+			FIRST_NOP = 32, /* first value in the enum */
 			Space = 32,
 			Apostrophe = 39, /* ' */
 			Comma = 44,      /* , */
@@ -132,6 +134,8 @@ namespace Quin
 			RightAlt = 346,
 			RightSuper = 347,
 			Menu = 348,
+
+			LAST_NOP /* max value in the key enum, add 1, e.g. {0,1,2,_3_} => 3-0 = 3 = sizeof{0,1,2} */
 		};
 	}
 }

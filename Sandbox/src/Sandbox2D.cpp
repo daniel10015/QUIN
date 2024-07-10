@@ -7,6 +7,22 @@
 #define ZERO_COLOR { 0.0,0.0,0.0,0.0 }
 #define REGULAR_TEXCORD {0.0,0.0,1.0,1.0}
 
+// faster way to write free memory and assign nullptr
+#define DEALLOCATE(ptr) delete ptr; ptr = nullptr
+
+// access the keycode state in m_keyStates
+// 1. get initial offset (0-indexed)
+// 2. divide by 8 to index into the byte 
+// 3. find bit with mod operator, move the bit to 0x1
+// 4. mask with 0x1 so other bits won't interfere 
+// 4a. (e.g. 11111110 >> 0 = 11111110 = true, although the 0th bit is false)
+// 4b. (e.g. 11111110 >> 0 = 11111110 & 0x1 = 00000000 = false, which is correct)
+// 5. for setting, shift '1' {0,1,...,7} bits to the left and bitwise OR with current states
+// 6. for clearing, same as setting, bitwise AND and mask with bitwise NOT with current states
+#define GET_KEY_STATE_IDX(x)   (m_keyStates[(x - Quin::Key::FIRST_NOP)/8] >>  (x%8)) & 0x1
+#define SET_KEY_STATE_IDX(x)    m_keyStates[(x - Quin::Key::FIRST_NOP)/8] |=  (1 << (x%8))
+#define CLEAR_KEY_STATE_IDX(x)  m_keyStates[(x - Quin::Key::FIRST_NOP)/8] &= ~(1 << (x%8))
+
 SandboxLayer::SandboxLayer(void* window) : Layer("Sandbox2D")
 {
 	// x-axis camera setup
@@ -26,11 +42,15 @@ SandboxLayer::SandboxLayer(void* window) : Layer("Sandbox2D")
 		m_texturesToIdxs[vertex.textureName].push_back(idx);
 		idx++;
 	}
+
+	// zero-out keycode states
+	for (size_t idx = 0; idx < GetKeycodeArraySize(); idx++)
+		m_keyStates[idx] = 0;
 }
 
 SandboxLayer::~SandboxLayer() 
 {
-
+	OnDetach();
 }
 
 void SandboxLayer::OnAttach()
@@ -79,8 +99,10 @@ void SandboxLayer::OnAttach()
 
 void SandboxLayer::OnDetach()
 {
-	if(!m_vertex_data)
-		delete m_vertex_data;
+	if (!m_vertex_data)
+	{
+		DEALLOCATE(m_vertex_data);
+	}
 }
 
 void SandboxLayer::OnUpdate()
@@ -164,10 +186,10 @@ bool SandboxLayer::KeyPressedEvent(const Quin::KeyPressedEvent& event)
 {
 	uint16_t keycode = event.GetKeyCode();
 	//QN_TRACE("Keycode {0}", keycode);
-	m_leftctrl |= keycode == Quin::Key::LeftControl;
+	SET_KEY_STATE_IDX( keycode );
 
 	// restart renderer
-	if (m_leftctrl && keycode == Quin::Key::R)
+	if (GET_KEY_STATE_IDX(Quin::Key::LeftControl) && keycode == Quin::Key::R)
 	{
 		QN_INFO("Restarting Renderer...");
 		scene->DestroyRenderer(true); //  destroy and recreate rendering object
@@ -216,7 +238,7 @@ bool SandboxLayer::KeyPressedEvent(const Quin::KeyPressedEvent& event)
 bool SandboxLayer::KeyReleasedEvent(const Quin::KeyReleasedEvent& event)
 {
 	uint16_t keycode = event.GetKeyCode();
-	m_leftctrl &= keycode != Quin::Key::LeftControl; // set FALSE unless not event and already true
+	CLEAR_KEY_STATE_IDX(keycode);
 	//QN_TRACE("Keycode {0}", keycode);
 
 	return true;

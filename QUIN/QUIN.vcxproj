@@ -192,7 +192,11 @@
     <ClCompile Include="src\Quin\LayerStack.cpp" />
     <ClCompile Include="src\Quin\Log.cpp" />
     <ClCompile Include="src\Quin\Platform\Windows\WinWindow.cpp" />
-    <ClCompile Include="src\Quin\qnpch.cpp" />
+    <ClCompile Include="src\Quin\qnpch.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Dist|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="src\Quin\stb_image.cpp" />
   </ItemGroup>
   <ItemGroup>
