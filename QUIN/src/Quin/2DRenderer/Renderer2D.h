@@ -38,6 +38,9 @@ namespace Quin { namespace Renderer2D
 		void AddQuadToBatch(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color, const glm::mat2& texCoords, const float serial = 0);
 		bool InitVulkan();
 		float AddTextureImage(const std::string& path, unsigned int width_offset = 0, unsigned int width = 0, unsigned int height_offset = 0, unsigned int height = 0);
+		void InitializeVertexBufferSize(size_t size);
+		void InitializeIndexBufferSize(size_t size);
+		void FlushBuffers();
 		// variables
 	private:
 		bool vulkanInitialized = false;
@@ -67,10 +70,14 @@ namespace Quin { namespace Renderer2D
 		std::vector<VkSemaphore> m_renderFinishedSemaphores;
 		std::vector<VkFence> m_inFlightFences;
 		// vertex and index buffer Vkmemory handles
-		VkBuffer m_vertexBuffer;
-		VkDeviceMemory m_vertexBufferMemory;
-		VkBuffer m_indexBuffer;
-		VkDeviceMemory m_indexBufferMemory;
+		std::vector<VkBuffer> m_vertexBuffers;
+		std::vector<VkDeviceMemory> m_vertexBuffersMemory;
+		std::vector<void*> m_vertexBuffersMapped;
+		size_t vCount = 0;
+		std::vector<VkBuffer> m_indexBuffers;
+		std::vector<VkDeviceMemory> m_indexBuffersMemory;
+		std::vector<void*> m_indexBuffersMapped;
+		size_t iCount = 0;
 		// texture handles and variables (these will become vectors later)
 		VkImage m_textureImage;
 		VkDeviceMemory m_textureImageMemory;

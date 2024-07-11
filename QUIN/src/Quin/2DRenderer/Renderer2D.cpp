@@ -117,13 +117,14 @@ namespace Quin { namespace Renderer2D
 		// automatically destroys descriptor sets
 		vkDestroyDescriptorSetLayout(m_device, m_descriptorSetLayout, nullptr);
 		
-		// destroy and free index buffer
-		vkDestroyBuffer(m_device, m_indexBuffer, nullptr);
-		vkFreeMemory(m_device, m_indexBufferMemory, nullptr);
+		// destroy and free index buffer and vertex buffer
+		for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+			vkDestroyBuffer(m_device, m_vertexBuffers[i], nullptr);
+			vkFreeMemory(m_device, m_vertexBuffersMemory[i], nullptr);
 
-		// destroy and free vertex buffer
-		vkDestroyBuffer(m_device, m_vertexBuffer, nullptr);
-		vkFreeMemory(m_device, m_vertexBufferMemory, nullptr);
+			vkDestroyBuffer(m_device, m_indexBuffers[i], nullptr);
+			vkFreeMemory(m_device, m_indexBuffersMemory[i], nullptr);
+		}
 
 		QN_CORE_INFO("Destroying Vulkan!");
 		#ifdef QN_DEBUG
@@ -230,21 +231,37 @@ namespace Quin { namespace Renderer2D
 		m_modelViewProjectionMatrix = mvpm;
 	}
 
+	void Renderer2D::InitializeVertexBufferSize(size_t size)
+	{
+		m_vertexData.resize(size);
+	}
+
+	void Renderer2D::InitializeIndexBufferSize(size_t size)
+	{
+		m_indices.resize(size);
+	}
+
+	void Renderer2D::FlushBuffers()
+	{
+		vCount = 0;
+		iCount = 0;
+	}
+
 	void Renderer2D::AddQuadToBatch(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color, const glm::mat2& texCoords, const float serial) {
 		// Calculate positions of the quad vertices 
 		// negate y-coordinate because vulkan rendering has y increasing downwards
-		m_vertexData.push_back({ glm::vec2(position.x, -(position.y + size.y)), color, texCoords[0], serial}); // top left
-		m_vertexData.push_back({ glm::vec2(position.x + size.x, -(position.y + size.y)), color, {texCoords[1][0], texCoords[0][1]}, serial}); // top right
-		m_vertexData.push_back({ glm::vec2(position.x + size.x, -(position.y)), color, texCoords[1], serial}); // bottom right
-		m_vertexData.push_back({ glm::vec2(position.x, -(position.y)), color, {texCoords[0][0], texCoords[1][1]}, serial}); // bottom left
+		m_vertexData[vCount++] = { glm::vec2(position.x, -(position.y + size.y)), color, texCoords[0], serial}; // top left
+		m_vertexData[vCount++] = { glm::vec2(position.x + size.x, -(position.y + size.y)), color, {texCoords[1][0], texCoords[0][1]}, serial}; // top right
+		m_vertexData[vCount++] = { glm::vec2(position.x + size.x, -(position.y)), color, texCoords[1], serial}; // bottom right
+		m_vertexData[vCount++] = { glm::vec2(position.x, -(position.y)), color, {texCoords[0][0], texCoords[1][1]}, serial}; // bottom left
 
-		uint32_t startIndex = static_cast<uint32_t>(m_vertexData.size()) - 4;
-		m_indices.push_back(startIndex); // top left
-		m_indices.push_back(startIndex + 1); // top right
-		m_indices.push_back(startIndex + 2); // bottom right
-		m_indices.push_back(startIndex); // top left
-		m_indices.push_back(startIndex + 2); // bottom right
-		m_indices.push_back(startIndex + 3); // bottom left
+		uint32_t startIndex = static_cast<uint32_t>( vCount ) - 4;
+		m_indices[iCount++] = startIndex; // top left
+		m_indices[iCount++] = startIndex + 1; // top right
+		m_indices[iCount++] = startIndex + 2; // bottom right
+		m_indices[iCount++] = startIndex; // top left
+		m_indices[iCount++] = startIndex + 2; // bottom right
+		m_indices[iCount++] = startIndex + 3; // bottom left
 
 		//QN_CORE_TRACE("Quad added to batch: vertex size = {0} , indices size = {1}", m_vertexData.size(), m_indices.size());
 	
@@ -988,56 +1005,38 @@ namespace Quin { namespace Renderer2D
 
 	void Renderer2D::CreateVertexBuffer()
 	{
+		// for now we do this, later we can modify this
 		VkDeviceSize buffSize = sizeof(m_vertexData[0]) * m_vertexData.size();
-		// stage memory first
-		VkBuffer stagingBuffer;
-		VkDeviceMemory stagingBufferMemory;
-		// stage vertex buffer in CPU accessible on the GPU
-		CreateBuffer(buffSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
 
-		// map memory
-		void* data;
-		vkMapMemory(m_device, stagingBufferMemory, 0, buffSize, 0, &data);
-		memcpy(data, m_vertexData.data(), (size_t)buffSize);
-		// to avoid caching errors we require memory must have VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
-		// we could also vkFlushMemoryRanges() which *may* increase performance
-		vkUnmapMemory(m_device, stagingBufferMemory);
-
-		// send vertex buffer here to GPU only memory
-		CreateBuffer(buffSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, m_vertexBuffer, m_vertexBufferMemory);
-	
-		CopyBuffer(stagingBuffer, m_vertexBuffer, buffSize);
-
-		// destroy staging buffer
-		vkDestroyBuffer(m_device, stagingBuffer, nullptr);
-		vkFreeMemory(m_device, stagingBufferMemory, nullptr);
+		m_vertexBuffers.resize(MAX_FRAMES_IN_FLIGHT);
+		m_vertexBuffersMemory.resize(MAX_FRAMES_IN_FLIGHT);
+		m_vertexBuffersMapped.resize(MAX_FRAMES_IN_FLIGHT);
+		for (unsigned int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+		{
+			// stage vertex buffer in CPU accessible on the GPU
+			CreateBuffer(buffSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, m_vertexBuffers[i], m_vertexBuffersMemory[i]);
+			// map memory
+			vkMapMemory(m_device, m_vertexBuffersMemory[i], 0, buffSize, 0, &m_vertexBuffersMapped[i]);
+			memcpy(m_vertexBuffersMapped[i], m_vertexData.data(), (size_t)buffSize);
+		}
 	}
 
 	void Renderer2D::CreateIndexBuffer()
 	{
+		// for now we do this, later we can modify this
 		VkDeviceSize buffSize = sizeof(m_indices[0]) * m_indices.size();
-		// stage memory first
-		VkBuffer stagingBuffer;
-		VkDeviceMemory stagingBufferMemory;
-		// stage vertex buffer in CPU accessible on the GPU
-		CreateBuffer(buffSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
 
-		// map memory
-		void* data;
-		vkMapMemory(m_device, stagingBufferMemory, 0, buffSize, 0, &data);
-		memcpy(data, m_indices.data(), (size_t)buffSize);
-		// to avoid caching errors we require memory must have VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
-		// we could also vkFlushMemoryRanges() which *may* increase performance
-		vkUnmapMemory(m_device, stagingBufferMemory);
-
-		// send vertex buffer here to GPU only memory
-		CreateBuffer(buffSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, m_indexBuffer, m_indexBufferMemory);
-
-		CopyBuffer(stagingBuffer, m_indexBuffer, buffSize);
-
-		// destroy staging buffer
-		vkDestroyBuffer(m_device, stagingBuffer, nullptr);
-		vkFreeMemory(m_device, stagingBufferMemory, nullptr);
+		m_indexBuffers.resize(MAX_FRAMES_IN_FLIGHT);
+		m_indexBuffersMemory.resize(MAX_FRAMES_IN_FLIGHT);
+		m_indexBuffersMapped.resize(MAX_FRAMES_IN_FLIGHT);
+		for (unsigned int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+		{
+			// stage vertex buffer in CPU accessible on the GPU
+			CreateBuffer(buffSize, VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, m_indexBuffers[i], m_indexBuffersMemory[i]);
+			// map memory
+			vkMapMemory(m_device, m_indexBuffersMemory[i], 0, buffSize, 0, &m_indexBuffersMapped[i]);
+			memcpy(m_indexBuffersMapped[i], m_indices.data(), (size_t)buffSize);
+		}
 	}
 
 	// persistent mapping so we write to CPU-GPU shared space on the GPU
@@ -1263,12 +1262,15 @@ namespace Quin { namespace Renderer2D
 		// bind graphics pipeline
 		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipeline);
 
+		// update vertex and index buffer
+		memcpy(m_vertexBuffersMapped[currentFrame], m_vertexData.data(), m_vertexData.size() * sizeof(m_vertexData[0]));
+		memcpy(m_indexBuffersMapped[currentFrame], m_indices.data(), m_indices.size() * sizeof(m_indices[0]));
 		// bind vertex buffer 
-		VkBuffer vertexBuffers[] = { m_vertexBuffer };
+		VkBuffer vertexBuffers[] = { m_vertexBuffers[currentFrame]};
 		VkDeviceSize offsets[] = { 0 }; // need to create vars to store offset data for arbitrary vBuf
 		vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
 		// bind index buffer
-		vkCmdBindIndexBuffer(commandBuffer, m_indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+		vkCmdBindIndexBuffer(commandBuffer, m_indexBuffers[currentFrame], 0, VK_INDEX_TYPE_UINT32);
 
 		// since we set viewport and scissor to be dynamic (for now) we must set them in the command buffer
 		VkViewport viewport{};

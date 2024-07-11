@@ -11,8 +11,8 @@ struct vertex_data2D
 	std::array<float, 4> textureDimensions;
 	uint32_t id;
 	float render_id;
-	std::array<int, 2> position; // (x,y,...)
-	std::array<int, 2> dimensions; // (length,height,...)
+	std::array<float, 2> position; // (x,y,...)
+	std::array<float, 2> dimensions; // (length,height,...)
 	float rotation;
 	uint32_t layer;
 	std::array<float, 4> color; // (r,g,b,a)

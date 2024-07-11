@@ -61,9 +61,23 @@ namespace Quin { namespace Renderer2D
 		m_renderer->DrawFrame();
 	}
 
-	void Scene2D::DrawQuad(float position_x, float position_y, float width, float height, const std::array<float, 4>& color, const std::array<float, 4>& texCoords, const float serial)
+	void Scene2D::AddQuad(float position_x, float position_y, float width, float height, const std::array<float, 4>& color, const std::array<float, 4>& texCoords, const float serial)
 	{
 		m_renderer->AddQuadToBatch(glm::vec2(position_x, position_y), glm::vec2(width, height), glm::vec4(color[0], color[1], color[2], color[3]), glm::mat2(texCoords[0], texCoords[1], texCoords[2], texCoords[3]), serial);
+	}
+
+	void Scene2D::Flush()
+	{
+		m_renderer->FlushBuffers();
+	}
+
+	void Scene2D::SetVertexBufferSize(size_t size)
+	{
+		m_renderer->InitializeVertexBufferSize(size);
+	}
+	void Scene2D::SetIndexBufferSize(size_t size)
+	{
+		m_renderer->InitializeIndexBufferSize(size);
 	}
 
 	void Scene2D::InitializeRenderer()

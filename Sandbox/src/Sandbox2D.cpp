@@ -89,11 +89,15 @@ void SandboxLayer::OnAttach()
 	}
 	*/
 	// draw one large quad with repeated texture
-	for (auto quad : *m_vertex_data)
+	scene->SetVertexBufferSize(4 * m_vertex_data->size());
+	scene->SetIndexBufferSize(6 * m_vertex_data->size());
+
+	for (auto& quad : *m_vertex_data)
 	{
-		scene->DrawQuad(quad.position[0], quad.position[1], quad.dimensions[0], quad.dimensions[1],
+		scene->AddQuad(quad.position[0], quad.position[1], quad.dimensions[0], quad.dimensions[1],
 			quad.color, quad.textureDimensions, quad.render_id);
 	}
+	scene->Flush();
 	scene->InitializeRenderer();
 }
 
@@ -107,7 +111,24 @@ void SandboxLayer::OnDetach()
 
 void SandboxLayer::OnUpdate()
 {
-	// TODO: implement position uniform in the shader for all quads 
+
+	// move character
+	if (GET_KEY_STATE_IDX(Quin::Key::W))
+		(*m_vertex_data)[2].position[1] += 0.01f;
+	if (GET_KEY_STATE_IDX(Quin::Key::S))
+		(*m_vertex_data)[2].position[1] -= 0.01f;
+	if (GET_KEY_STATE_IDX(Quin::Key::D))
+		(*m_vertex_data)[2].position[0] += 0.01f;
+	if (GET_KEY_STATE_IDX(Quin::Key::A))
+		(*m_vertex_data)[2].position[0] -= 0.01f;
+
+	for (auto& quad : *m_vertex_data)
+	{
+		scene->AddQuad(quad.position[0], quad.position[1], quad.dimensions[0], quad.dimensions[1],
+			quad.color, quad.textureDimensions, quad.render_id);
+	}
+	scene->Flush();
+
 	scene->RenderFrame();
 }
 
@@ -223,12 +244,15 @@ bool SandboxLayer::KeyPressedEvent(const Quin::KeyPressedEvent& event)
 			}
 		}
 
-		// push quads
-		for (auto &quad : *m_vertex_data)
+		scene->SetVertexBufferSize(4 * m_vertex_data->size());
+		scene->SetIndexBufferSize(6 * m_vertex_data->size());
+
+		for (auto& quad : *m_vertex_data)
 		{
-			scene->DrawQuad(quad.position[0], quad.position[1], quad.dimensions[0], quad.dimensions[1],
+			scene->AddQuad(quad.position[0], quad.position[1], quad.dimensions[0], quad.dimensions[1],
 				quad.color, quad.textureDimensions, quad.render_id);
 		}
+		scene->Flush();
 
 		scene->InitializeRenderer(); // initialize
 	}

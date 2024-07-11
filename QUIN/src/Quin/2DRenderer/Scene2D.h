@@ -18,8 +18,11 @@ namespace Quin { namespace Renderer2D
 		void DestroyCamera(bool recreate = false);
 		// for render frame
 		void RenderFrame();
-		void DrawQuad(float position_x, float position_y, float width, float height, const std::array<float, 4>& color = { 0.0, 0.0, 1.0, 0.0 }, const std::array<float, 4>& texCoords = {0.0, 0.0, 1.0, 1.0}, const float serial = 0); // blue default
-	
+		void AddQuad(float position_x, float position_y, float width, float height, const std::array<float, 4>& color = { 0.0, 0.0, 1.0, 0.0 }, const std::array<float, 4>& texCoords = {0.0, 0.0, 1.0, 1.0}, const float serial = 0); // blue default
+		void Flush();
+		void SetVertexBufferSize(size_t size);
+		void SetIndexBufferSize(size_t size);
+
 		void UpdateCameraPosition(glm::vec3 position);
 		const glm::vec3& GetCameraPosition();
 

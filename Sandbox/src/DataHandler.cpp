@@ -30,8 +30,8 @@ std::vector<vertex_data2D>* GetVertexData(std::string fileName)
 	for (const auto& item : jsonObj) {
 		vertex_data2D vertex;
 		vertex.id = item.at("id").get<uint32_t>();
-		vertex.position = { item.at("position")[0].get<int>(), item.at("position")[1].get<int>() };
-		vertex.dimensions = { item.at("size")[0].get<int>(), item.at("size")[1].get<int>() };
+		vertex.position = { item.at("position")[0].get<float>(), item.at("position")[1].get<float>() };
+		vertex.dimensions = { item.at("size")[0].get<float>(), item.at("size")[1].get<float>() };
 		vertex.textureName = item.at("texture").get<std::string>();
 		vertex.textureDimensions = { item.at("textureDimensions")[0].get<float>(), item.at("textureDimensions")[1].get<float>(), item.at("textureDimensions")[2].get<float>(), item.at("textureDimensions")[3].get<float>() };
 		vertex.color = { item.at("color")[0].get<float>(), item.at("color")[1].get<float>(), item.at("color")[2].get<float>(), item.at("color")[3].get<float>() };
