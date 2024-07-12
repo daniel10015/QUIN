@@ -7,6 +7,8 @@
 #define ZERO_COLOR { 0.0,0.0,0.0,0.0 }
 #define REGULAR_TEXCORD {0.0,0.0,1.0,1.0}
 
+#define CHARACTER_VELOCITY(x) 0.1f*x
+
 // faster way to write free memory and assign nullptr
 #define DEALLOCATE(ptr) delete ptr; ptr = nullptr
 
@@ -109,18 +111,19 @@ void SandboxLayer::OnDetach()
 	}
 }
 
-void SandboxLayer::OnUpdate()
+void SandboxLayer::OnUpdate(double timeStep)
 {
-
 	// move character
+	m_deltaTime = timeStep / 1000000000.0;
+	// move 5 World-Units per second
 	if (GET_KEY_STATE_IDX(Quin::Key::W))
-		(*m_vertex_data)[2].position[1] += 0.01f;
+		(*m_vertex_data)[2].position[1] += 5.0f * m_deltaTime;
 	if (GET_KEY_STATE_IDX(Quin::Key::S))
-		(*m_vertex_data)[2].position[1] -= 0.01f;
+		(*m_vertex_data)[2].position[1] -= 5.0f * m_deltaTime;
 	if (GET_KEY_STATE_IDX(Quin::Key::D))
-		(*m_vertex_data)[2].position[0] += 0.01f;
+		(*m_vertex_data)[2].position[0] += 5.0f * m_deltaTime;
 	if (GET_KEY_STATE_IDX(Quin::Key::A))
-		(*m_vertex_data)[2].position[0] -= 0.01f;
+		(*m_vertex_data)[2].position[0] -= 5.0f * m_deltaTime;
 
 	for (auto& quad : *m_vertex_data)
 	{

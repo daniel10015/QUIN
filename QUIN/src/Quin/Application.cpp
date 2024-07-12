@@ -37,15 +37,17 @@ namespace Quin
 
 	void Application::run()
 	{
-
+		m_timeStep.start();
+		double deltaTime = 0;
 		while (m_running)
 		{
 
 			if (!m_minimized)
 			{
+				deltaTime = m_timeStep.Mark();
 				for (auto iter = m_layerStack.Front(); iter != m_layerStack.Back(); iter++)
 				{
-					(**iter).OnUpdate();
+					(**iter).OnUpdate(deltaTime);
 				}
 			}
 

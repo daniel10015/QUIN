@@ -24,6 +24,7 @@ namespace Quin {
 		std::unique_ptr<Window> m_window;
 		bool m_running;
 		bool m_minimized;
+		timer m_timeStep;
 		LayerStack m_layerStack;
 	private:
 		bool CloseWindow(WindowClosedEvent& event);

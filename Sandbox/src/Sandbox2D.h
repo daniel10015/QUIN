@@ -12,7 +12,7 @@ public:
 
 	void OnAttach();
 	void OnDetach();
-	void OnUpdate();
+	void OnUpdate(double timeStep);
 	void OnEvent(Quin::Event& event);
 // engine variables
 private:
@@ -43,6 +43,7 @@ private:
 // utilities
 private:
 	Quin::timer application_time;
+	double m_deltaTime;
 // event handlers
 private:
 	// MOUSE EVENTS
