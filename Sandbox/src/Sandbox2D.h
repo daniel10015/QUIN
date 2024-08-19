@@ -14,6 +14,10 @@ public:
 	void OnDetach();
 	void OnUpdate(double timeStep);
 	void OnEvent(Quin::Event& event);
+// engine helpers
+private:
+	void AddBatchOnUpdate(double timeStep);
+	void AddParticleBatch();
 // engine variables
 private:
 	Quin::Renderer2D::Scene2D* scene;
@@ -22,6 +26,8 @@ private:
 	// later we will change these to be more flexible but for now hard-coded
 	std::vector<vertex_data2D>* m_vertex_data;
 	std::unordered_map < std::string, std::vector<size_t> > m_texturesToIdxs;
+	std::vector<Quin::ParticleData*>* m_particleData;
+	Quin::ParticleSystem m_particleSystem;
 
 	glm::vec2 m_mouseCoordinates = { 0.0f, 0.0f };
 	// camera space is MxN (20x20)

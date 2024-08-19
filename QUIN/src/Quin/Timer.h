@@ -4,6 +4,14 @@
 #include "qnpch.h"
 #include <chrono>
 #include "core.h"
+// nanosecond to second
+#define NS_TO_S(x)  (x)/1000000000.0
+// nanosecond to millisecond
+#define NS_TO_MS(x) (x)/1000000.0
+// nanosecond to microsecond
+#define NS_TO_US(x) (x)/1000.0
+// millisecond to nanosecond
+#define MS_TO_NS(x) (x)*1000000.0
 
 namespace Quin
 {

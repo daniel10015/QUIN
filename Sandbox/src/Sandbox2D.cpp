@@ -9,6 +9,10 @@
 
 #define CHARACTER_VELOCITY(x) 0.1f*x
 
+#define MAX_QUADS 5000
+#define MAX_VERTEX_BUFFER_SIZE MAX_QUADS * 4
+#define MAX_INDEX_BUFFER_SIZE MAX_QUADS * 6
+
 // faster way to write free memory and assign nullptr
 #define DEALLOCATE(ptr) delete ptr; ptr = nullptr
 
@@ -39,11 +43,23 @@ SandboxLayer::SandboxLayer(void* window) : Layer("Sandbox2D")
 	// load vertex data
 	m_vertex_data = GetVertexData("Assets/Data/VertexData.json");
 	size_t idx = 0;
-	for (auto vertex : *m_vertex_data)
+	for (auto& vertex : *m_vertex_data)
 	{
 		m_texturesToIdxs[vertex.textureName].push_back(idx);
 		idx++;
 	}
+
+	// load particle system test
+	QN_INFO("Loading particle system");
+	Quin::ParticleEmitter::SetupDefinition();
+	Quin::ParticleEmitter* emitterTemp = new Quin::ParticleEmitter(5);
+	emitterTemp->SetInitialPosition({ 1.0, -5.0 });
+	emitterTemp->SetEmittingFrequency(5);
+	emitterTemp->SetVelocityOverLife({ "1/t", "exp(t*t)" });
+	emitterTemp->SetSizeOverLife("sin(t)+1.1");
+	emitterTemp->SetLife(2000.0f);
+	m_particleSystem.AddEmitter(emitterTemp); // add emitter
+	QN_INFO("Finished constructing Particle System");
 
 	// zero-out keycode states
 	for (size_t idx = 0; idx < GetKeycodeArraySize(); idx++)
@@ -57,9 +73,8 @@ SandboxLayer::~SandboxLayer()
 
 void SandboxLayer::OnAttach()
 {
-	std::cout << "TEST\n\n\n\n\n";
-	QN_TRACE("lctrl keycode: {0}", static_cast<uint16_t>(Quin::Key::LeftControl));
-	QN_TRACE("R keycode: {0}", static_cast<uint16_t>(Quin::Key::R));
+	//QN_TRACE("lctrl keycode: {0}", static_cast<uint16_t>(Quin::Key::LeftControl));
+	//QN_TRACE("R keycode: {0}", static_cast<uint16_t>(Quin::Key::R));
 
 
 	QN_INFO("Sprite dimensions: {0}x{0}", SPRITE_DIMENSIONS);
@@ -91,8 +106,9 @@ void SandboxLayer::OnAttach()
 	}
 	*/
 	// draw one large quad with repeated texture
-	scene->SetVertexBufferSize(4 * m_vertex_data->size());
-	scene->SetIndexBufferSize(6 * m_vertex_data->size());
+	// vbuf bytes := 720000 = 72kb
+	scene->SetVertexBufferSize(MAX_VERTEX_BUFFER_SIZE);
+	scene->SetIndexBufferSize(MAX_INDEX_BUFFER_SIZE);
 
 	for (auto& quad : *m_vertex_data)
 	{
@@ -113,8 +129,26 @@ void SandboxLayer::OnDetach()
 
 void SandboxLayer::OnUpdate(double timeStep)
 {
+	// multithread particle system OnUpdate() and AddBatchOnUpdate() 
+	// vector < particleSystem > :: OnUpdate(timeStep)
+	m_particleSystem.OnUpdate(timeStep);
+	m_particleData = m_particleSystem.GetParticles();
+	// AddBatchOnUpdate(timeStep)
+	AddBatchOnUpdate(timeStep);
+
+	// join up here
+	// add particles to batch
+	AddParticleBatch();
+	
+	scene->RenderFrame();
+
+	scene->Flush(); // flush buffers after draw call
+}
+
+void SandboxLayer::AddBatchOnUpdate(double timeStep)
+{
 	// move character
-	m_deltaTime = timeStep / 1000000000.0;
+	m_deltaTime = NS_TO_S(timeStep);
 	// move 5 World-Units per second
 	if (GET_KEY_STATE_IDX(Quin::Key::W))
 		(*m_vertex_data)[2].position[1] += 5.0f * m_deltaTime;
@@ -130,9 +164,37 @@ void SandboxLayer::OnUpdate(double timeStep)
 		scene->AddQuad(quad.position[0], quad.position[1], quad.dimensions[0], quad.dimensions[1],
 			quad.color, quad.textureDimensions, quad.render_id);
 	}
-	scene->Flush();
+}
 
-	scene->RenderFrame();
+void SandboxLayer::AddParticleBatch()
+{
+	vertex_data2D vertex;
+	vertex.color = ZERO_COLOR;
+	vertex.render_id = 0;
+	vertex.textureDimensions = { 0.0,0.0,1.0,1.0 };
+	//size_t particles_added = 0; // debug
+	// loop through each emitter
+	for (const auto particles : *m_particleData)
+	{
+		// check if emitter is running
+		if (particles->size)
+		{
+			// loop through each particle in the emitter and add to batch
+			for (size_t i = 0; i < particles->size; i++)
+			{
+				if (particles->size_data[i] == 0)
+					continue;
+				//particles_added++;
+				vertex.dimensions = { particles->size_data[i], particles->size_data[i] };
+				vertex.position = particles->position_data[i];
+				// add vertex to batch
+				scene->AddQuad(vertex.position[0], vertex.position[1], vertex.dimensions[0], vertex.dimensions[1],
+					vertex.color, vertex.textureDimensions, vertex.render_id);
+			}
+		}
+	}
+	//if(particles_added>0)
+	//	QN_TRACE("vertices caputed:= {0}", suck);
 }
 
 void SandboxLayer::OnEvent(Quin::Event& event)
@@ -177,12 +239,12 @@ bool SandboxLayer::MouseMovedEvent(const Quin::MouseMoveEvent& event)
 	if (m_mousePress)
 	{
 		glm::vec3 cameraPos = scene->GetCameraPosition();
-		QN_TRACE("m_windowToWorld_x: {0}, mouse_x differential: {1}, world coordinate differential: {2}", m_windowToWorld_x, newMouseX - m_mouseCoordinates[0], (newMouseX - m_mouseCoordinates[0]) / m_windowToWorld_x);
+		//QN_TRACE("m_windowToWorld_x: {0}, mouse_x differential: {1}, world coordinate differential: {2}", m_windowToWorld_x, newMouseX - m_mouseCoordinates[0], (newMouseX - m_mouseCoordinates[0]) / m_windowToWorld_x);
 
 		scene->UpdateCameraPosition(glm::vec3(cameraPos[0] + ((m_mouseCoordinates[0] - newMouseX) / m_windowToWorld_x), cameraPos[1] + (-(newMouseY - m_mouseCoordinates[1]) / m_windowToWorld_y), cameraPos[2]));
-		QN_TRACE("Update camera in world coordinates: ({0}, {1})", cameraPos[0] + ((newMouseX - m_mouseCoordinates[0]) / m_windowToWorld_x), cameraPos[1] + (-(newMouseY - m_mouseCoordinates[1]) / m_windowToWorld_y));
+		//QN_TRACE("Update camera in world coordinates: ({0}, {1})", cameraPos[0] + ((newMouseX - m_mouseCoordinates[0]) / m_windowToWorld_x), cameraPos[1] + (-(newMouseY - m_mouseCoordinates[1]) / m_windowToWorld_y));
 
-		QN_TRACE("change of coordinates took {0}ns", application_time.Mark());
+		//QN_TRACE("change of coordinates took {0}ns", application_time.Mark());
 	}
 
 	m_mouseCoordinates[0] = newMouseX;
@@ -193,13 +255,13 @@ bool SandboxLayer::MouseMovedEvent(const Quin::MouseMoveEvent& event)
 
 bool SandboxLayer::MouseScrollEvent(const Quin::MouseScrollEvent& event)
 {
-	QN_TRACE("Mouse Scroll Event: {0}", event.GetString());
+	//QN_TRACE("Mouse Scroll Event: {0}", event.GetString());
 	float differential = -event.GetOffsetY() * CAMERA_ZOOM_FACTOR; // this is just 1 click, set to +/-0.05
 	m_cameraView[0] *= (1+differential); // currWidth*= +/- 1.05
 	m_cameraView[1] *= (1+differential); // currHeight*= +/- 1.05
 	scene->UpdateZoom(differential);
 
-	QN_TRACE("camera view: ({0},{1})", m_cameraView[0], m_cameraView[1]);
+	//QN_TRACE("camera view: ({0},{1})", m_cameraView[0], m_cameraView[1]);
 
 	RecomputeWindowToWorld();
 
@@ -211,6 +273,12 @@ bool SandboxLayer::KeyPressedEvent(const Quin::KeyPressedEvent& event)
 	uint16_t keycode = event.GetKeyCode();
 	//QN_TRACE("Keycode {0}", keycode);
 	SET_KEY_STATE_IDX( keycode );
+
+	// reset particles
+	if (GET_KEY_STATE_IDX(Quin::Key::LeftControl) && keycode == Quin::Key::P)
+	{
+		m_particleSystem.Trigger(); 
+	}
 
 	// restart renderer
 	if (GET_KEY_STATE_IDX(Quin::Key::LeftControl) && keycode == Quin::Key::R)

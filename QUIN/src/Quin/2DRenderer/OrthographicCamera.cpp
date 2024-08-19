@@ -33,7 +33,7 @@ namespace Quin
 
 		const float newHorizontal = oldHorizontal *(1+differential);
 		const float newVertical   = oldVertical*(1+differential);
-		QN_CORE_TRACE("New horizontal: {0}", newHorizontal);
+		//QN_CORE_TRACE("New horizontal: {0}", newHorizontal);
 
 		float differentialScalar = differential / 2.0f;
 		// update new lengths
@@ -46,7 +46,7 @@ namespace Quin
 
 		// set new projection
 		m_projectionMatrix = glm::ortho(m_left, m_right, m_bottom, m_top, -1.0f, 1.0f);
-		QN_CORE_TRACE("new left {0}, new right {1}, new top {2}, new bottom {3}", m_left, m_right, m_top, m_bottom);
+		//QN_CORE_TRACE("new left {0}, new right {1}, new top {2}, new bottom {3}", m_left, m_right, m_top, m_bottom);
 
 		m_projectionViewMatrix = m_projectionMatrix * m_viewMatrix;
 	}

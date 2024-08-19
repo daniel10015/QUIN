@@ -14,6 +14,6 @@ layout(location = 1) out vec3 fragTexCoordIdx;
 
 void main() {
     gl_Position = matrices.modelViewProjection * vec4(inPosition, 0.0, 1.0);
-    // fragColor = inColor;
+    fragColor = inColor;
     fragTexCoordIdx = vec3(inTexCoord.xy, inLayer);
 }

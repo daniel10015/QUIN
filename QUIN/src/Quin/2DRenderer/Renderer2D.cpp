@@ -1007,6 +1007,7 @@ namespace Quin { namespace Renderer2D
 	{
 		// for now we do this, later we can modify this
 		VkDeviceSize buffSize = sizeof(m_vertexData[0]) * m_vertexData.size();
+		QN_CORE_INFO("Vertex Buffer size: {0}", (size_t)buffSize);
 
 		m_vertexBuffers.resize(MAX_FRAMES_IN_FLIGHT);
 		m_vertexBuffersMemory.resize(MAX_FRAMES_IN_FLIGHT);
@@ -1293,7 +1294,8 @@ namespace Quin { namespace Renderer2D
 		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelineLayout, 0, 1, &(m_descriptorSets[currentFrame]), 0, nullptr);
 
 		// draw call
-		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(m_indices.size()), 1, 0, 0, 0);
+		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(iCount), 1, 0, 0, 0);
+		//QN_CORE_TRACE("indicies drawn: {0}", iCount);
 
 		// end render pass (no more draw calls with this render pass)
 		vkCmdEndRenderPass(commandBuffer);

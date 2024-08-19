@@ -85,6 +85,48 @@ project "GLFW"
 		runtime "Release"
 		optimize "on"
 
+project "MathEval"
+	location "QUIN/vendor/MathEval"
+	kind "StaticLib"
+	language "C++" 
+
+	targetdir ( "bin/" .. outputdir .. "/%{prj.name}" )
+	objdir ( "bin-int/" .. outputdir .. "/%{prj.name}" )
+
+	files
+	{
+		"QUIN/vendor/MathEval/MathEval/**.h",
+		"QUIN/vendor/MathEval/MathEval/**.cpp",
+	}
+
+	includedirs
+	{
+		"%{prj.name}/vendor/MathEval/MathEval/src",
+	}
+
+	filter "system:windows"
+		cppdialect "C++17"
+		staticruntime "On"
+		systemversion "latest"
+
+
+	filter "configurations:Debug"
+		staticruntime "On"
+		buildoptions "/MDd"
+		runtime "Debug"
+		symbols "on"
+
+	filter "configurations:Release"
+		staticruntime "On"
+		buildoptions "/MD"
+		runtime "Release"
+		optimize "on"
+
+	filter "configurations:Dist"
+		staticruntime "On"
+		buildoptions "/MD"
+		runtime "Release"
+		optimize "on"
 
 
 project "QUIN"
@@ -115,6 +157,7 @@ project "QUIN"
 		"%{prj.name}/vendor/GLFW/include",
 		"%{prj.name}/vendor/stb",
 		"%{prj.name}/vendor/json/include",
+		"%{prj.name}/vendor/MathEval/MathEval/include",
 		"/VulkanSDK/1.3.280.0/Include"
 	}
 
@@ -123,7 +166,8 @@ project "QUIN"
 	links
 	{
 		"GLFW",
-		"vulkan-1" -- will need to link vulkan later
+		"vulkan-1",
+		"MathEval"
 	}
 
 	filter "system:windows"
@@ -180,6 +224,7 @@ project "Sandbox"
 	{
 		"QUIN/vendor/spdlog/include",
 		"QUIN/vendor/json/include",
+		"QUIN/vendor/MathEval/MathEval/include",
 		"QUIN/src",
 		"/VulkanSDK/1.3.280.0/Include"
 	}

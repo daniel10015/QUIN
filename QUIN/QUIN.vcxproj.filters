@@ -13,6 +13,9 @@
     <Filter Include="Quin\Events">
       <UniqueIdentifier>{86F35C0D-F2A8-D502-7B9D-CFD9E751CC06}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Quin\Particle System">
+      <UniqueIdentifier>{4A240118-36B3-8AE1-DFD1-9EDCCB3F9B87}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Quin\Platform">
       <UniqueIdentifier>{76F485F4-E2B4-012B-ABEF-4AA8176F4607}</UniqueIdentifier>
     </Filter>
@@ -70,6 +73,9 @@
     <ClInclude Include="src\Quin\Log.h">
       <Filter>Quin</Filter>
     </ClInclude>
+    <ClInclude Include="src\Quin\Particle System\ParticleSystem.h">
+      <Filter>Quin\Particle System</Filter>
+    </ClInclude>
     <ClInclude Include="src\Quin\Platform\Windows\WinWindow.h">
       <Filter>Quin\Platform\Windows</Filter>
     </ClInclude>
@@ -113,6 +119,9 @@
     </ClCompile>
     <ClCompile Include="src\Quin\Log.cpp">
       <Filter>Quin</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Quin\Particle System\ParticleSystem.cpp">
+      <Filter>Quin\Particle System</Filter>
     </ClCompile>
     <ClCompile Include="src\Quin\Platform\Windows\WinWindow.cpp">
       <Filter>Quin\Platform\Windows</Filter>

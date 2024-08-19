@@ -20,6 +20,7 @@
 // rendering
 #include "Quin/2DRenderer/Camera.h"
 #include "Quin/2DRenderer/Scene2D.h"
+#include "Quin/Particle System/ParticleSystem.h"
 //#include "Quin/2D Renderer/Renderer2D.h"
 
 // ------- ENTRY POINT -------
