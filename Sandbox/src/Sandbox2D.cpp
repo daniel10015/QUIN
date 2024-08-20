@@ -9,7 +9,7 @@
 
 #define CHARACTER_VELOCITY(x) 0.1f*x
 
-#define MAX_QUADS 5000
+#define MAX_QUADS 10000
 #define MAX_VERTEX_BUFFER_SIZE MAX_QUADS * 4
 #define MAX_INDEX_BUFFER_SIZE MAX_QUADS * 6
 
@@ -48,16 +48,18 @@ SandboxLayer::SandboxLayer(void* window) : Layer("Sandbox2D")
 		m_texturesToIdxs[vertex.textureName].push_back(idx);
 		idx++;
 	}
+	QN_INFO("Number of textures: {0}", idx);
+	QN_INFO("Number of quads loaded: {0}", m_vertex_data->size());
 
 	// load particle system test
 	QN_INFO("Loading particle system");
 	Quin::ParticleEmitter::SetupDefinition();
-	Quin::ParticleEmitter* emitterTemp = new Quin::ParticleEmitter(5);
+	Quin::ParticleEmitter* emitterTemp = new Quin::ParticleEmitter(50);
 	emitterTemp->SetInitialPosition({ 1.0, -5.0 });
-	emitterTemp->SetEmittingFrequency(5);
+	emitterTemp->SetEmittingFrequency(10.5);
 	emitterTemp->SetVelocityOverLife({ "1/t", "exp(t*t)" });
-	emitterTemp->SetSizeOverLife("sin(t)+1.1");
-	emitterTemp->SetLife(2000.0f);
+	emitterTemp->SetSizeOverLife("1+t");
+	emitterTemp->SetLife(3000.0f);
 	m_particleSystem.AddEmitter(emitterTemp); // add emitter
 	QN_INFO("Finished constructing Particle System");
 
@@ -109,6 +111,7 @@ void SandboxLayer::OnAttach()
 	// vbuf bytes := 720000 = 72kb
 	scene->SetVertexBufferSize(MAX_VERTEX_BUFFER_SIZE);
 	scene->SetIndexBufferSize(MAX_INDEX_BUFFER_SIZE);
+	scene->InitializeRenderer();
 
 	for (auto& quad : *m_vertex_data)
 	{
@@ -116,7 +119,6 @@ void SandboxLayer::OnAttach()
 			quad.color, quad.textureDimensions, quad.render_id);
 	}
 	scene->Flush();
-	scene->InitializeRenderer();
 }
 
 void SandboxLayer::OnDetach()
@@ -131,13 +133,15 @@ void SandboxLayer::OnUpdate(double timeStep)
 {
 	// multithread particle system OnUpdate() and AddBatchOnUpdate() 
 	// vector < particleSystem > :: OnUpdate(timeStep)
+	//std::thread particleThread(&Quin::ParticleSystem::OnUpdate, &m_particleSystem, timeStep);
 	m_particleSystem.OnUpdate(timeStep);
-	m_particleData = m_particleSystem.GetParticles();
 	// AddBatchOnUpdate(timeStep)
 	AddBatchOnUpdate(timeStep);
 
 	// join up here
 	// add particles to batch
+	//particleThread.join();
+	m_particleData = m_particleSystem.GetParticles();
 	AddParticleBatch();
 	
 	scene->RenderFrame();

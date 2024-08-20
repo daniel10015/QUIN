@@ -231,6 +231,7 @@ namespace Quin { namespace Renderer2D
 		m_modelViewProjectionMatrix = mvpm;
 	}
 
+	// should remove these eventually, but keep them for now when we do 3D rendering
 	void Renderer2D::InitializeVertexBufferSize(size_t size)
 	{
 		m_vertexData.resize(size);
@@ -250,19 +251,22 @@ namespace Quin { namespace Renderer2D
 	void Renderer2D::AddQuadToBatch(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color, const glm::mat2& texCoords, const float serial) {
 		// Calculate positions of the quad vertices 
 		// negate y-coordinate because vulkan rendering has y increasing downwards
-		m_vertexData[vCount++] = { glm::vec2(position.x, -(position.y + size.y)), color, texCoords[0], serial}; // top left
-		m_vertexData[vCount++] = { glm::vec2(position.x + size.x, -(position.y + size.y)), color, {texCoords[1][0], texCoords[0][1]}, serial}; // top right
-		m_vertexData[vCount++] = { glm::vec2(position.x + size.x, -(position.y)), color, texCoords[1], serial}; // bottom right
-		m_vertexData[vCount++] = { glm::vec2(position.x, -(position.y)), color, {texCoords[0][0], texCoords[1][1]}, serial}; // bottom left
+		// copy directly into shared memory
+		static_cast<vertex2D*>(m_vertexBuffersMapped[currentFrame])[vCount++] = { glm::vec2(position.x, -(position.y + size.y)), color, texCoords[0], serial }; // top left
+		static_cast<vertex2D*>(m_vertexBuffersMapped[currentFrame])[vCount++] = { glm::vec2(position.x + size.x, -(position.y + size.y)), color, {texCoords[1][0], texCoords[0][1]}, serial }; // top right
+		static_cast<vertex2D*>(m_vertexBuffersMapped[currentFrame])[vCount++] = { glm::vec2(position.x + size.x, -(position.y)), color, texCoords[1], serial }; // bottom right
+		static_cast<vertex2D*>(m_vertexBuffersMapped[currentFrame])[vCount++] = { glm::vec2(position.x, -(position.y)), color, {texCoords[0][0], texCoords[1][1]}, serial}; // bottom left
 
 		uint32_t startIndex = static_cast<uint32_t>( vCount ) - 4;
-		m_indices[iCount++] = startIndex; // top left
-		m_indices[iCount++] = startIndex + 1; // top right
-		m_indices[iCount++] = startIndex + 2; // bottom right
-		m_indices[iCount++] = startIndex; // top left
-		m_indices[iCount++] = startIndex + 2; // bottom right
-		m_indices[iCount++] = startIndex + 3; // bottom left
+		static_cast<uint32_t*>(m_indexBuffersMapped[currentFrame])[iCount++] = startIndex; // top left
+		static_cast<uint32_t*>(m_indexBuffersMapped[currentFrame])[iCount++] = startIndex + 1; // top right
+		static_cast<uint32_t*>(m_indexBuffersMapped[currentFrame])[iCount++] = startIndex + 2; // bottom right
+		static_cast<uint32_t*>(m_indexBuffersMapped[currentFrame])[iCount++] = startIndex; // top left
+		static_cast<uint32_t*>(m_indexBuffersMapped[currentFrame])[iCount++] = startIndex + 2; // bottom right
+		static_cast<uint32_t*>(m_indexBuffersMapped[currentFrame])[iCount++] = startIndex + 3; // bottom left
+		
 
+		
 		//QN_CORE_TRACE("Quad added to batch: vertex size = {0} , indices size = {1}", m_vertexData.size(), m_indices.size());
 	
 		//PRINT_QUAD_INFO
@@ -1263,9 +1267,6 @@ namespace Quin { namespace Renderer2D
 		// bind graphics pipeline
 		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipeline);
 
-		// update vertex and index buffer
-		memcpy(m_vertexBuffersMapped[currentFrame], m_vertexData.data(), m_vertexData.size() * sizeof(m_vertexData[0]));
-		memcpy(m_indexBuffersMapped[currentFrame], m_indices.data(), m_indices.size() * sizeof(m_indices[0]));
 		// bind vertex buffer 
 		VkBuffer vertexBuffers[] = { m_vertexBuffers[currentFrame]};
 		VkDeviceSize offsets[] = { 0 }; // need to create vars to store offset data for arbitrary vBuf

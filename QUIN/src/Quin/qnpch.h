@@ -14,6 +14,7 @@
 #include <vector>
 #include <unordered_map>
 #include <unordered_set>
+#include <thread>
 
 #ifdef QN_PLATFORM_WINDOWS
 

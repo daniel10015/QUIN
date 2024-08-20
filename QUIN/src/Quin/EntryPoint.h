@@ -15,7 +15,7 @@ int main(int argc, char** argv)
 	if (argc > 1) // existance of argument implies profiling
 	{
 		QN_CORE_INFO("Application started, waiting for profiling to attach...");
-		std::this_thread::sleep_for(std::chrono::seconds(5));  // Add a delay of 5 seconds
+		std::this_thread::sleep_for(std::chrono::seconds(3));  // Add a delay of 3 seconds
 	}
 	auto app = Quin::CreateApplication();
 	app->run();
