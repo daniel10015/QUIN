@@ -39,6 +39,20 @@
 #endif
 
 const int MAX_FRAMES_IN_FLIGHT = 2;
+static constexpr bool isPowerOfTwo(unsigned int x) {
+	return (x != 0) && ((x & (x - 1)) == 0);
+}
+
+template <unsigned int MAX_FRAMES_IN_FLIGHT>
+constexpr uint32_t updateFrame(uint32_t currentFrame) {
+	if (isPowerOfTwo(MAX_FRAMES_IN_FLIGHT)) {
+		return (currentFrame + 1) & (MAX_FRAMES_IN_FLIGHT - 1);
+	}
+	else {
+		return (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
+	}
+}
+
 
 namespace Quin { namespace Renderer2D
 {
@@ -60,7 +74,7 @@ namespace Quin { namespace Renderer2D
 		bool inst = CreateInstance(); QN_CORE_ASSERT(inst, "Could not create vulkan instance");
 		bool valid = SET_VALIDATION;  QN_CORE_ASSERT(valid, "validation layers requested, but not available!");
 		// setup vulkan essentials
-		SetupDebugMessenger();   
+		SETUP_DEBUG;   
 		CreateSurface(m_window);
 		GetPhysicalDevice();
 		CreateLogicalDevice();
@@ -216,7 +230,8 @@ namespace Quin { namespace Renderer2D
 
 		vkQueuePresentKHR(m_graphicsQueue, &presentInfo);
 
-		currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT; // update current frame
+		//currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT; // update current frame
+		currentFrame = updateFrame<MAX_FRAMES_IN_FLIGHT>(currentFrame);
 		//QN_CORE_TRACE("draw frame took: {0}", m_renderingTime.Mark());
 	}
 

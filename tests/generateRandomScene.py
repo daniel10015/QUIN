@@ -35,9 +35,9 @@ template_data = [
     }
 ]
 
-# Create the 10,000 quads
+# Create the 100,000 quads
 quads = []
-quad_count = 500
+quad_count = 100000 # 100,000
 grid_size = int(quad_count ** 0.5)
 spacing = 1.0  # Spacing between quads in the grid
 

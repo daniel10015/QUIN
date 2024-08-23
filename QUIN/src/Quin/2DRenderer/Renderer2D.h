@@ -123,11 +123,14 @@ namespace Quin { namespace Renderer2D
 			const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
 			void* pUserData);
 #ifdef QN_DEBUG 
+		#define SETUP_VULAKN_DEBUG SetupDebugMessenger()
 		static VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger);
 		static void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* pAllocator);
 		void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
 		void SetupDebugMessenger();
 		bool SetValidationLayers();
+#else
+		#define SETUP_VULAKN_DEBUG
 #endif
 		// setup device and queue families
 	private:

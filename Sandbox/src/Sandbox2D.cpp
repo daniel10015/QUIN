@@ -9,7 +9,7 @@
 
 #define CHARACTER_VELOCITY(x) 0.1f*x
 
-#define MAX_QUADS 10000
+#define MAX_QUADS 100100
 #define MAX_VERTEX_BUFFER_SIZE MAX_QUADS * 4
 #define MAX_INDEX_BUFFER_SIZE MAX_QUADS * 6
 
@@ -41,7 +41,8 @@ SandboxLayer::SandboxLayer(void* window) : Layer("Sandbox2D")
 	scene = new Quin::Renderer2D::Scene2D(window, left, right, up, down);
 
 	// load vertex data
-	m_vertex_data = GetVertexData("Assets/Data/VertexData.json");
+	//m_vertex_data = GetVertexData("Assets/Data/VertexData.json");
+	m_vertex_data = GetVertexData("Assets/Data/quads.json");
 	size_t idx = 0;
 	for (auto& vertex : *m_vertex_data)
 	{
