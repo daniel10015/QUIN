@@ -43,6 +43,9 @@
     <None Include="Assets\Data\VertexData.json">
       <Filter>Assets\Data</Filter>
     </None>
+    <None Include="Assets\Data\quads.json">
+      <Filter>Assets\Data</Filter>
+    </None>
     <None Include="CompileShaders.bat" />
   </ItemGroup>
   <ItemGroup>

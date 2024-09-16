@@ -24,6 +24,7 @@ private:
 // application variables
 private:
 	// later we will change these to be more flexible but for now hard-coded
+	std::array<float, 2> toFollow = { 0.0,0.0 };
 	std::vector<vertex_data2D>* m_vertex_data;
 	std::unordered_map < std::string, std::vector<size_t> > m_texturesToIdxs;
 	std::vector<Quin::ParticleData*>* m_particleData;

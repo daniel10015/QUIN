@@ -1,14 +1,18 @@
 # Quin Engine
 Quin is an acronym for $(\mathbb{Q}\cup \mathbb{I})^n$ or just $\mathbb{R}^n$. 
 This project is primarily a learning experience for me to practice designing and implementing APIs. As such I will list out several resources I've used along the way:
-- TheCherno 
-- vulkan-tutorial.com 
+- vulkan-tutorial.com
+  - How vulkan works and many of its features
 - vkguide.dev
+  - Rendering architecture and optimization
+- TheCherno.com
+  - Game engine architecture (longer explanations)
 
 While my main focus is on rendering, I plan to work on other features as needed to make future development or testing easier (e.g. physics, particle systems, editors).
 
 # Platforms
-- Currently only supports Windows. Plans are to later support linux and macOS.
+- Currently only supports Windows. Plans are to later support linux and macOS. 
+- Currently only supports Vulkan. Might support other APIs later. 
 
 # Getting Started
 1. Clone the repo by running `clone --recurse-submodules https://github.com/daniel10015/QUIN.git`. If submodules aren't cloned then run `git submodule update --init --recursive`

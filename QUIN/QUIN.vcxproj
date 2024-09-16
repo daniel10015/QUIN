@@ -87,7 +87,6 @@
       <AdditionalOptions>/MDd %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
-      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -97,7 +96,8 @@
       <ImportLibrary>..\bin\Debug-windows-x86_64\QUIN\QUIN.lib</ImportLibrary>
     </Link>
     <PostBuildEvent>
-      <Command>IF EXIST ..\bin\Debug-windows-x86_64\QUIN\QUIN.dll\ (xcopy /Q /E /Y /I ..\bin\Debug-windows-x86_64\QUIN\QUIN.dll ..\bin\Debug-windows-x86_64\Sandbox &gt; nul) ELSE (xcopy /Q /Y /I ..\bin\Debug-windows-x86_64\QUIN\QUIN.dll ..\bin\Debug-windows-x86_64\Sandbox &gt; nul)</Command>
+      <Command>IF EXIST ..\bin\Debug-windows-x86_64\QUIN\QUIN.dll\ (xcopy /Q /E /Y /I ..\bin\Debug-windows-x86_64\QUIN\QUIN.dll ..\bin\Debug-windows-x86_64\Sandbox &gt; nul) ELSE (xcopy /Q /Y /I ..\bin\Debug-windows-x86_64\QUIN\QUIN.dll ..\bin\Debug-windows-x86_64\Sandbox &gt; nul)
+IF EXIST ..\bin\Debug-windows-x86_64\QUIN\QUIN.dll\ (xcopy /Q /E /Y /I ..\bin\Debug-windows-x86_64\QUIN\QUIN.dll ..\bin\Debug-windows-x86_64"\Quin Editor\" &gt; nul) ELSE (xcopy /Q /Y /I ..\bin\Debug-windows-x86_64\QUIN\QUIN.dll ..\bin\Debug-windows-x86_64"\Quin Editor\" &gt; nul)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -116,7 +116,6 @@
       <AdditionalOptions>/MD %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
-      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -127,7 +126,8 @@
       <ImportLibrary>..\bin\Release-windows-x86_64\QUIN\QUIN.lib</ImportLibrary>
     </Link>
     <PostBuildEvent>
-      <Command>IF EXIST ..\bin\Release-windows-x86_64\QUIN\QUIN.dll\ (xcopy /Q /E /Y /I ..\bin\Release-windows-x86_64\QUIN\QUIN.dll ..\bin\Release-windows-x86_64\Sandbox &gt; nul) ELSE (xcopy /Q /Y /I ..\bin\Release-windows-x86_64\QUIN\QUIN.dll ..\bin\Release-windows-x86_64\Sandbox &gt; nul)</Command>
+      <Command>IF EXIST ..\bin\Release-windows-x86_64\QUIN\QUIN.dll\ (xcopy /Q /E /Y /I ..\bin\Release-windows-x86_64\QUIN\QUIN.dll ..\bin\Release-windows-x86_64\Sandbox &gt; nul) ELSE (xcopy /Q /Y /I ..\bin\Release-windows-x86_64\QUIN\QUIN.dll ..\bin\Release-windows-x86_64\Sandbox &gt; nul)
+IF EXIST ..\bin\Release-windows-x86_64\QUIN\QUIN.dll\ (xcopy /Q /E /Y /I ..\bin\Release-windows-x86_64\QUIN\QUIN.dll ..\bin\Release-windows-x86_64"\Quin Editor\" &gt; nul) ELSE (xcopy /Q /Y /I ..\bin\Release-windows-x86_64\QUIN\QUIN.dll ..\bin\Release-windows-x86_64"\Quin Editor\" &gt; nul)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dist|x64'">
@@ -146,7 +146,6 @@
       <AdditionalOptions>/MD %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
-      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -157,17 +156,12 @@
       <ImportLibrary>..\bin\Dist-windows-x86_64\QUIN\QUIN.lib</ImportLibrary>
     </Link>
     <PostBuildEvent>
-      <Command>IF EXIST ..\bin\Dist-windows-x86_64\QUIN\QUIN.dll\ (xcopy /Q /E /Y /I ..\bin\Dist-windows-x86_64\QUIN\QUIN.dll ..\bin\Dist-windows-x86_64\Sandbox &gt; nul) ELSE (xcopy /Q /Y /I ..\bin\Dist-windows-x86_64\QUIN\QUIN.dll ..\bin\Dist-windows-x86_64\Sandbox &gt; nul)</Command>
+      <Command>IF EXIST ..\bin\Dist-windows-x86_64\QUIN\QUIN.dll\ (xcopy /Q /E /Y /I ..\bin\Dist-windows-x86_64\QUIN\QUIN.dll ..\bin\Dist-windows-x86_64\Sandbox &gt; nul) ELSE (xcopy /Q /Y /I ..\bin\Dist-windows-x86_64\QUIN\QUIN.dll ..\bin\Dist-windows-x86_64\Sandbox &gt; nul)
+IF EXIST ..\bin\Dist-windows-x86_64\QUIN\QUIN.dll\ (xcopy /Q /E /Y /I ..\bin\Dist-windows-x86_64\QUIN\QUIN.dll ..\bin\Dist-windows-x86_64"\Quin Editor\" &gt; nul) ELSE (xcopy /Q /Y /I ..\bin\Dist-windows-x86_64\QUIN\QUIN.dll ..\bin\Dist-windows-x86_64"\Quin Editor\" &gt; nul)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="src\Quin.h" />
-    <ClInclude Include="src\Quin\2DRenderer\Buffer.h" />
-    <ClInclude Include="src\Quin\2DRenderer\Camera.h" />
-    <ClInclude Include="src\Quin\2DRenderer\OrthographicCamera.h" />
-    <ClInclude Include="src\Quin\2DRenderer\QuinMath.h" />
-    <ClInclude Include="src\Quin\2DRenderer\Renderer2D.h" />
-    <ClInclude Include="src\Quin\2DRenderer\Scene2D.h" />
     <ClInclude Include="src\Quin\Application.h" />
     <ClInclude Include="src\Quin\EntryPoint.h" />
     <ClInclude Include="src\Quin\Events\ApplicationEvent.h" />
@@ -179,7 +173,18 @@
     <ClInclude Include="src\Quin\LayerStack.h" />
     <ClInclude Include="src\Quin\Log.h" />
     <ClInclude Include="src\Quin\Particle System\ParticleSystem.h" />
+    <ClInclude Include="src\Quin\Platform\Vulkan\VulkanAPI.h" />
     <ClInclude Include="src\Quin\Platform\Windows\WinWindow.h" />
+    <ClInclude Include="src\Quin\Renderer\Buffer.h" />
+    <ClInclude Include="src\Quin\Renderer\Camera.h" />
+    <ClInclude Include="src\Quin\Renderer\OrthographicCamera.h" />
+    <ClInclude Include="src\Quin\Renderer\QuinMath.h" />
+    <ClInclude Include="src\Quin\Renderer\RenderData.h" />
+    <ClInclude Include="src\Quin\Renderer\Renderer.h" />
+    <ClInclude Include="src\Quin\Renderer\Renderer2D.h" />
+    <ClInclude Include="src\Quin\Renderer\Scene2D.h" />
+    <ClInclude Include="src\Quin\Resource System\ECS.h" />
+    <ClInclude Include="src\Quin\Resource System\ResourceManager.h" />
     <ClInclude Include="src\Quin\Timer.h" />
     <ClInclude Include="src\Quin\Window.h" />
     <ClInclude Include="src\Quin\core.h" />
@@ -187,16 +192,19 @@
     <ClInclude Include="src\Quin\qnpch.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\Quin\2DRenderer\Camera.cpp" />
-    <ClCompile Include="src\Quin\2DRenderer\OrthographicCamera.cpp" />
-    <ClCompile Include="src\Quin\2DRenderer\Renderer2D.cpp" />
-    <ClCompile Include="src\Quin\2DRenderer\Scene2D.cpp" />
     <ClCompile Include="src\Quin\Application.cpp" />
     <ClCompile Include="src\Quin\Layer.cpp" />
     <ClCompile Include="src\Quin\LayerStack.cpp" />
     <ClCompile Include="src\Quin\Log.cpp" />
     <ClCompile Include="src\Quin\Particle System\ParticleSystem.cpp" />
+    <ClCompile Include="src\Quin\Platform\Vulkan\VulkanAPI.cpp" />
     <ClCompile Include="src\Quin\Platform\Windows\WinWindow.cpp" />
+    <ClCompile Include="src\Quin\Renderer\Camera.cpp" />
+    <ClCompile Include="src\Quin\Renderer\OrthographicCamera.cpp" />
+    <ClCompile Include="src\Quin\Renderer\Renderer.cpp" />
+    <ClCompile Include="src\Quin\Renderer\Renderer2D.cpp" />
+    <ClCompile Include="src\Quin\Renderer\Scene2D.cpp" />
+    <ClCompile Include="src\Quin\Resource System\ResourceManager.cpp" />
     <ClCompile Include="src\Quin\qnpch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Dist|x64'">Create</PrecompiledHeader>
@@ -205,8 +213,8 @@
     <ClCompile Include="src\Quin\stb_image.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="src\Quin\2DRenderer\Shaders\Shader.frag" />
-    <None Include="src\Quin\2DRenderer\Shaders\Shader.vert" />
+    <None Include="src\Quin\Renderer\Shaders\Shader.frag" />
+    <None Include="src\Quin\Renderer\Shaders\Shader.vert" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="vendor\GLFW\GLFW.vcxproj">

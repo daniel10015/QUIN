@@ -15,10 +15,10 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{F4C124E3-60A1-A37E-69B9-2E55D5170AE0}</ProjectGuid>
+    <ProjectGuid>{89F56F89-F5AA-E87E-7E9F-E255EA53DF82}</ProjectGuid>
     <IgnoreWarnCompileDuplicatedFilename>true</IgnoreWarnCompileDuplicatedFilename>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>Sandbox</RootNamespace>
+    <RootNamespace>Quin Editor</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -55,23 +55,23 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>..\bin\Debug-windows-x86_64\Sandbox\</OutDir>
-    <IntDir>..\bin-int\Debug-windows-x86_64\Sandbox\</IntDir>
-    <TargetName>Sandbox</TargetName>
+    <OutDir>..\bin\Debug-windows-x86_64\Quin Editor\</OutDir>
+    <IntDir>..\bin-int\Debug-windows-x86_64\Quin Editor\</IntDir>
+    <TargetName>Quin Editor</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>..\bin\Release-windows-x86_64\Sandbox\</OutDir>
-    <IntDir>..\bin-int\Release-windows-x86_64\Sandbox\</IntDir>
-    <TargetName>Sandbox</TargetName>
+    <OutDir>..\bin\Release-windows-x86_64\Quin Editor\</OutDir>
+    <IntDir>..\bin-int\Release-windows-x86_64\Quin Editor\</IntDir>
+    <TargetName>Quin Editor</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Dist|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>..\bin\Dist-windows-x86_64\Sandbox\</OutDir>
-    <IntDir>..\bin-int\Dist-windows-x86_64\Sandbox\</IntDir>
-    <TargetName>Sandbox</TargetName>
+    <OutDir>..\bin\Dist-windows-x86_64\Quin Editor\</OutDir>
+    <IntDir>..\bin-int\Dist-windows-x86_64\Quin Editor\</IntDir>
+    <TargetName>Quin Editor</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -87,16 +87,10 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
-    <CustomBuildStep>
-      <Message>Compiling Shader Programs</Message>
-    </CustomBuildStep>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
-    <PreBuildEvent>
-      <Command>call CompileShaders.bat</Command>
-    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -114,17 +108,11 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
-    <CustomBuildStep>
-      <Message>Compiling Shader Programs</Message>
-    </CustomBuildStep>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
-    <PreBuildEvent>
-      <Command>call CompileShaders.bat</Command>
-    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dist|x64'">
     <ClCompile>
@@ -142,44 +130,18 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
-    <CustomBuildStep>
-      <Message>Compiling Shader Programs</Message>
-    </CustomBuildStep>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
-    <PreBuildEvent>
-      <Command>call CompileShaders.bat</Command>
-    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="src\DataHandler.h" />
-    <ClInclude Include="src\Sandbox2D.h" />
+    <ClInclude Include="src\EditorLayer.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\DataHandler.cpp" />
-    <ClCompile Include="src\Sandbox2D.cpp" />
-    <ClCompile Include="src\SandboxApplication.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Assets\Data\ParticleData.json" />
-    <None Include="Assets\Data\VertexData.json" />
-    <None Include="Assets\Data\quads.json" />
-    <None Include="CompileShaders.bat" />
-  </ItemGroup>
-  <ItemGroup>
-    <Image Include="Assets\Textures\Sprites\D_Attack.png" />
-    <Image Include="Assets\Textures\Sprites\D_Death.png" />
-    <Image Include="Assets\Textures\Sprites\D_Walk.png" />
-    <Image Include="Assets\Textures\Sprites\S_Attack.png" />
-    <Image Include="Assets\Textures\Sprites\S_Death.png" />
-    <Image Include="Assets\Textures\Sprites\S_Walk.png" />
-    <Image Include="Assets\Textures\Sprites\U_Attack.png" />
-    <Image Include="Assets\Textures\Sprites\U_Death.png" />
-    <Image Include="Assets\Textures\Sprites\U_Walk.png" />
-    <Image Include="Assets\Textures\Sprites\grass_1.png" />
+    <ClCompile Include="src\Editor.cpp" />
+    <ClCompile Include="src\EditorLayer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\QUIN\QUIN.vcxproj">

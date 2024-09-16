@@ -9,7 +9,7 @@
 
 #define CHARACTER_VELOCITY(x) 0.1f*x
 
-#define MAX_QUADS 100100
+#define MAX_QUADS 1000000
 #define MAX_VERTEX_BUFFER_SIZE MAX_QUADS * 4
 #define MAX_INDEX_BUFFER_SIZE MAX_QUADS * 6
 
@@ -55,12 +55,12 @@ SandboxLayer::SandboxLayer(void* window) : Layer("Sandbox2D")
 	// load particle system test
 	QN_INFO("Loading particle system");
 	Quin::ParticleEmitter::SetupDefinition();
-	Quin::ParticleEmitter* emitterTemp = new Quin::ParticleEmitter(50);
+	Quin::ParticleEmitter* emitterTemp = new Quin::ParticleEmitter(2);
 	emitterTemp->SetInitialPosition({ 1.0, -5.0 });
-	emitterTemp->SetEmittingFrequency(10.5);
-	emitterTemp->SetVelocityOverLife({ "1/t", "exp(t*t)" });
-	emitterTemp->SetSizeOverLife("1+t");
-	emitterTemp->SetLife(3000.0f);
+	emitterTemp->SetEmittingFrequency(1);
+	emitterTemp->SetVelocityOverLife({ "0.0", "0.0" });
+	emitterTemp->SetSizeOverLife("5.0");
+	emitterTemp->SetLife(10.0f);
 	m_particleSystem.AddEmitter(emitterTemp); // add emitter
 	QN_INFO("Finished constructing Particle System");
 
@@ -187,7 +187,7 @@ void SandboxLayer::AddParticleBatch()
 			// loop through each particle in the emitter and add to batch
 			for (size_t i = 0; i < particles->size; i++)
 			{
-				if (particles->size_data[i] == 0)
+				if (particles->size_data[i] <= 0.000005)
 					continue;
 				//particles_added++;
 				vertex.dimensions = { particles->size_data[i], particles->size_data[i] };
@@ -198,8 +198,8 @@ void SandboxLayer::AddParticleBatch()
 			}
 		}
 	}
-	//if(particles_added>0)
-	//	QN_TRACE("vertices caputed:= {0}", suck);
+	if(m_particleData->at(0)->size > 0)
+		QN_TRACE("ex data: ({0}, {1}), size({2})", m_particleData->at(0)->position_data[0][0], m_particleData->at(0)->position_data[0][1], m_particleData->at(0)->size_data[0]);
 }
 
 void SandboxLayer::OnEvent(Quin::Event& event)

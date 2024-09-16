@@ -51,7 +51,9 @@ namespace Quin
 			t = NS_TO_S(m_life - i * m_emittingFrequency + m_runningTime);
 			m_particles[i][0] += m_maf_velocity[0]->Calculate({ t })*sec_diff;
 			m_particles[i][1] += m_maf_velocity[1]->Calculate({ t })*sec_diff;
-			m_particleSizes[i] = std::max( m_maf_size->Calculate({ t }), 0.0f); // clamp
+			m_particleSizes[i] = std::max(m_maf_size->Calculate({ t }), 0.0f); // clamp
+			//static float epsilon = 1e-5f; // Small tolerance value
+			//QN_CORE_TRACE("Particle true: {0}", m_particleSizes[i] - std::max(m_maf_size->Calculate({ t }), 0.0f) < epsilon);
 		}
 		m_life += deltaTime;
 	}
@@ -132,6 +134,7 @@ namespace Quin
 
 	void ParticleEmitter::reset()
 	{
+		QN_CORE_TRACE("Particle Emitter reset (should now be ({0},{1})", m_initialPosition[0], m_initialPosition[1]);
 		m_life = 0;
 		m_runningTime = 0;
 		m_startParticles = 0;

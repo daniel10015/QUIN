@@ -183,11 +183,71 @@ project "QUIN"
 	
 		postbuildcommands
 		{
-			("{COPY} %{cfg.buildtarget.relpath} ../bin/" .. outputdir .. "/Sandbox/")
+			-- Copy QUIN.dll to Sandbox bin directory
+			("{COPY} %{cfg.buildtarget.relpath} ../bin/" .. outputdir .. "/Sandbox/"),
+			-- Copy QUIN.dll to Quin Editor bin directory
+			("{COPY} %{cfg.buildtarget.relpath} ../bin/" .. outputdir .. "\"/Quin Editor/\"")
 		}
 
 	filter "configurations:Debug"
 		defines "QN_ENABLE_ASSERTS" -- assert only in debug mode
+		defines "QN_DEBUG"
+		buildoptions "/MDd"
+		symbols "On"
+
+	filter "configurations:Release"
+		defines "QN_RELEASE"
+		buildoptions "/MD"
+		optimize "On"
+
+	filter "configurations:Dist"
+		defines "QN_DIST"
+		buildoptions "/MD"
+		optimize "On"
+
+project "Quin Editor"
+	location "Quin Editor" 
+	kind "ConsoleApp" 
+	language "C++" 
+	targetdir ( "bin/" .. outputdir .. "/%{prj.name}" )
+	objdir ( "bin-int/" .. outputdir .. "/%{prj.name}" )
+
+	files
+	{
+		"%{prj.name}/src/**.h",
+		"%{prj.name}/src/**.cpp",
+		"%{prj.name}/src/**.frag",
+		"%{prj.name}/src/**.vert",
+		"%{prj.name}/Assets/**.json",
+		"%{prj.name}/Assets/**.png",
+		"%{prj.name}/**.bat",
+	}
+	
+	includedirs
+	{
+		"QUIN/vendor/spdlog/include",
+		"QUIN/vendor/json/include",
+		"QUIN/vendor/MathEval/MathEval/include",
+		"QUIN/src",
+		"/VulkanSDK/1.3.280.0/Include"
+	}
+
+	links
+	{
+		"QUIN"
+	}
+
+	filter "system:windows"
+		cppdialect "C++17"
+		staticruntime "On"
+		systemversion "latest"
+		
+		defines
+		{
+			"QN_PLATFORM_WINDOWS"
+		}
+
+	filter "configurations:Debug"
 		defines "QN_DEBUG"
 		buildoptions "/MDd"
 		symbols "On"

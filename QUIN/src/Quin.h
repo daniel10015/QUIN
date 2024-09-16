@@ -18,10 +18,10 @@
 #include <Quin/Events/KeyboardEvent.h>
 #include <Quin/Events/ApplicationEvent.h>
 // rendering
-#include "Quin/2DRenderer/Camera.h"
-#include "Quin/2DRenderer/Scene2D.h"
+//#include "Quin/Renderer/Scene2D.h"
 #include "Quin/Particle System/ParticleSystem.h"
-//#include "Quin/2D Renderer/Renderer2D.h"
+// system
+#include "Quin/Resource System/ECS.h"
 
 // ------- ENTRY POINT -------
 // ---------------------------

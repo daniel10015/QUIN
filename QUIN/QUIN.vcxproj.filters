@@ -4,12 +4,6 @@
     <Filter Include="Quin">
       <UniqueIdentifier>{E2798B7C-CEB0-8C0D-779D-721063B3080F}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Quin\2DRenderer">
-      <UniqueIdentifier>{BE707C38-2AFC-E9FC-330D-6DF19F1746FD}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Quin\2DRenderer\Shaders">
-      <UniqueIdentifier>{97732C29-03AB-74C0-0CB5-D8E3786B9BB9}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Quin\Events">
       <UniqueIdentifier>{86F35C0D-F2A8-D502-7B9D-CFD9E751CC06}</UniqueIdentifier>
     </Filter>
@@ -19,30 +13,24 @@
     <Filter Include="Quin\Platform">
       <UniqueIdentifier>{76F485F4-E2B4-012B-ABEF-4AA8176F4607}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Quin\Platform\Vulkan">
+      <UniqueIdentifier>{36A132A5-2230-BC6E-CB4E-D069B7BCCC14}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Quin\Platform\Windows">
       <UniqueIdentifier>{B0B4A37C-1C21-5F77-E514-F7D4514081DF}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Quin\Renderer">
+      <UniqueIdentifier>{C8FB62CF-34BC-DE05-FDF6-2783697623E2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Quin\Renderer\Shaders">
+      <UniqueIdentifier>{A1684A64-0DD5-055F-D6C8-9DBC42F427C7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Quin\Resource System">
+      <UniqueIdentifier>{DE23C60A-CAB2-4FD4-73D1-63CF5F3F607A}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Quin.h" />
-    <ClInclude Include="src\Quin\2DRenderer\Buffer.h">
-      <Filter>Quin\2DRenderer</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Quin\2DRenderer\Camera.h">
-      <Filter>Quin\2DRenderer</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Quin\2DRenderer\OrthographicCamera.h">
-      <Filter>Quin\2DRenderer</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Quin\2DRenderer\QuinMath.h">
-      <Filter>Quin\2DRenderer</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Quin\2DRenderer\Renderer2D.h">
-      <Filter>Quin\2DRenderer</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Quin\2DRenderer\Scene2D.h">
-      <Filter>Quin\2DRenderer</Filter>
-    </ClInclude>
     <ClInclude Include="src\Quin\Application.h">
       <Filter>Quin</Filter>
     </ClInclude>
@@ -76,8 +64,41 @@
     <ClInclude Include="src\Quin\Particle System\ParticleSystem.h">
       <Filter>Quin\Particle System</Filter>
     </ClInclude>
+    <ClInclude Include="src\Quin\Platform\Vulkan\VulkanAPI.h">
+      <Filter>Quin\Platform\Vulkan</Filter>
+    </ClInclude>
     <ClInclude Include="src\Quin\Platform\Windows\WinWindow.h">
       <Filter>Quin\Platform\Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Quin\Renderer\Buffer.h">
+      <Filter>Quin\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Quin\Renderer\Camera.h">
+      <Filter>Quin\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Quin\Renderer\OrthographicCamera.h">
+      <Filter>Quin\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Quin\Renderer\QuinMath.h">
+      <Filter>Quin\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Quin\Renderer\RenderData.h">
+      <Filter>Quin\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Quin\Renderer\Renderer.h">
+      <Filter>Quin\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Quin\Renderer\Renderer2D.h">
+      <Filter>Quin\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Quin\Renderer\Scene2D.h">
+      <Filter>Quin\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Quin\Resource System\ECS.h">
+      <Filter>Quin\Resource System</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Quin\Resource System\ResourceManager.h">
+      <Filter>Quin\Resource System</Filter>
     </ClInclude>
     <ClInclude Include="src\Quin\Timer.h">
       <Filter>Quin</Filter>
@@ -96,18 +117,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\Quin\2DRenderer\Camera.cpp">
-      <Filter>Quin\2DRenderer</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Quin\2DRenderer\OrthographicCamera.cpp">
-      <Filter>Quin\2DRenderer</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Quin\2DRenderer\Renderer2D.cpp">
-      <Filter>Quin\2DRenderer</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Quin\2DRenderer\Scene2D.cpp">
-      <Filter>Quin\2DRenderer</Filter>
-    </ClCompile>
     <ClCompile Include="src\Quin\Application.cpp">
       <Filter>Quin</Filter>
     </ClCompile>
@@ -123,8 +132,29 @@
     <ClCompile Include="src\Quin\Particle System\ParticleSystem.cpp">
       <Filter>Quin\Particle System</Filter>
     </ClCompile>
+    <ClCompile Include="src\Quin\Platform\Vulkan\VulkanAPI.cpp">
+      <Filter>Quin\Platform\Vulkan</Filter>
+    </ClCompile>
     <ClCompile Include="src\Quin\Platform\Windows\WinWindow.cpp">
       <Filter>Quin\Platform\Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Quin\Renderer\Camera.cpp">
+      <Filter>Quin\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Quin\Renderer\OrthographicCamera.cpp">
+      <Filter>Quin\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Quin\Renderer\Renderer.cpp">
+      <Filter>Quin\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Quin\Renderer\Renderer2D.cpp">
+      <Filter>Quin\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Quin\Renderer\Scene2D.cpp">
+      <Filter>Quin\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Quin\Resource System\ResourceManager.cpp">
+      <Filter>Quin\Resource System</Filter>
     </ClCompile>
     <ClCompile Include="src\Quin\qnpch.cpp">
       <Filter>Quin</Filter>
@@ -134,11 +164,11 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="src\Quin\2DRenderer\Shaders\Shader.frag">
-      <Filter>Quin\2DRenderer\Shaders</Filter>
+    <None Include="src\Quin\Renderer\Shaders\Shader.frag">
+      <Filter>Quin\Renderer\Shaders</Filter>
     </None>
-    <None Include="src\Quin\2DRenderer\Shaders\Shader.vert">
-      <Filter>Quin\2DRenderer\Shaders</Filter>
+    <None Include="src\Quin\Renderer\Shaders\Shader.vert">
+      <Filter>Quin\Renderer\Shaders</Filter>
     </None>
   </ItemGroup>
 </Project>
