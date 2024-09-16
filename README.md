@@ -1,22 +1,10 @@
 # Quin Engine
-Quin is a game engine, primarily supporting real-time 3D graphics. 
-
-This is my first attempt at creating a game engine, as such I've used plenty of resources. Here is a list of them and their keypoints:
-- vulkan-tutorial.com
-  - How vulkan works and many of its features
-- vkguide.dev
-  - Rendering architecture and optimization
-- TheCherno.com
-  - Game engine architecture (longer explanations)
-- Unreal Engine
-  - Editor workflow
-
-While my main focus is on rendering, I plan to work on other features as needed to make future development or testing easier (e.g. physics, particle systems, editors).
+Quin is a game engine, primarily supporting real-time 3D graphics. Currently it's going through a major refactor, so some implementations are left empty.
 
 # Platforms
 - Currently only supports Windows. Plans are to later support linux and macOS. 
 - Currently only supports Vulkan. 
-  - I've made an abstraction so I can implement another API renderer and it should work out of the box. 
+  - I've made an abstraction so I can implement another API for the renderer to use while application logic can stay the same. 
 
 # Getting Started
 1. Clone the repo by running `clone --recurse-submodules https://github.com/daniel10015/QUIN.git`. If submodules aren't cloned then run `git submodule update --init --recursive`
@@ -40,4 +28,16 @@ TODO
 
 
 # Notes
+This is my first attempt at creating a game engine, as such I've used plenty of resources. Here is a list of them and their keypoints:
+- vulkan-tutorial.com
+  - How vulkan works and many of its features
+- vkguide.dev
+  - Rendering architecture and optimization
+- TheCherno.com
+  - Game engine architecture (longer explanations)
+- Unreal Engine and Unity docs and talks
+  - Editor workflow
+
+While my main focus is on rendering, I plan to work on other features as needed to make future development or testing easier (e.g. physics, particle systems, editors).
+
 - 9/15/2024 I pushed a major refactor decoupling engine components and abstracting the renderer, which makes many features unusable in its current state. I'm looking to build it back from the ground up with the editor at the forefront of it. 
