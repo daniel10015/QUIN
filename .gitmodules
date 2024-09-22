@@ -13,3 +13,6 @@
 [submodule "QUIN/vendor/MathEval"]
 	path = QUIN/vendor/MathEval
 	url = https://github.com/daniel10015/Math-Expression-Evaluator.git
+[submodule "QUIN/vendor/VulkanMemoryAllocator"]
+	path = QUIN/vendor/VulkanMemoryAllocator
+	url = https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git
