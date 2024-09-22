@@ -158,6 +158,7 @@ project "QUIN"
 		"%{prj.name}/vendor/stb",
 		"%{prj.name}/vendor/json/include",
 		"%{prj.name}/vendor/MathEval/MathEval/include",
+		"%{prj.name}/vendor/VulkanMemoryAllocator/include",
 		"/VulkanSDK/1.3.280.0/Include"
 	}
 
