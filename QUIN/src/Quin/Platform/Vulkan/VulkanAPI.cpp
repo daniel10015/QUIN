@@ -2,6 +2,7 @@
 #include "VulkanAPI.h"
 #include <set>
 #include <GLFW/glfw3.h>
+#include "utils.h"
 
 #ifdef QN_DEBUG 
 	#define SET_VALIDATION SetValidationLayers()
@@ -71,6 +72,14 @@ namespace Quin
 
 	dataInfo VulkanAPI::AllocateStaticMemory(RESOURCE_TYPE resourceType, std::string filename, uint32_t transform_size)
 	{
+		std::unique_ptr<ObjData> data;
+
+		if (resourceType == RESOURCE_TYPE::Mesh)
+		{
+			ObjLoader loadFile(filename);
+			data = loadFile.ReadFile();
+		}
+
 		return {};
 	}
 
@@ -487,8 +496,10 @@ namespace Quin
 	void VulkanAPI::Create3DGraphicsPipeline(std::string vertexShader, std::string pixelShader)
 	{
 		// later make a vector<vector<char>*> for shader programs (doesn't need to be constexpr) 
-		auto vertShaderCode = ReadFile(vertexShader);
-		auto fragShaderCode = ReadFile(pixelShader);
+		BinaryLoader vertShaderLoader(vertexShader);
+		BinaryLoader fragShaderLoader(pixelShader);
+		auto vertShaderCode = vertShaderLoader.ReadFile();
+		auto fragShaderCode = fragShaderLoader.ReadFile();
 
 		VkShaderModule vertShaderModule = CreateShaderModule(vertShaderCode);
 		VkShaderModule fragShaderModule = CreateShaderModule(fragShaderCode);
@@ -763,23 +774,6 @@ namespace Quin
 		VkShaderModule shaderModule;
 		QN_CORE_ASSERT(vkCreateShaderModule(m_device, &createInfo, nullptr, &shaderModule) == VK_SUCCESS, "failed to create shader module!");
 		return shaderModule;
-	}
-
-	std::vector<char> VulkanAPI::ReadFile(const std::string& filename)
-	{
-		// reading at the end of the file lets us determine the size so we can allocate it before hand
-		std::ifstream file(filename, std::ios::binary | std::ios::ate);
-
-		QN_CORE_ASSERT(file.is_open(), "Failed to open shader file");
-
-		size_t fileSize = (size_t)file.tellg();
-		std::vector<char> buffer(fileSize);
-
-		file.seekg(0);
-		file.read(buffer.data(), fileSize);
-		file.close();
-
-		return buffer;
 	}
 
 	// in the future consider adding a points system to choose the best CPU

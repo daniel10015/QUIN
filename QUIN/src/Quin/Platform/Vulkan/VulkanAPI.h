@@ -213,7 +213,6 @@ private:
 	static void CleanupSwapChain();
 	// utilities
 	private:
-		static std::vector<char> ReadFile(const std::string& filename); // reads binary file, returns the bytes
 		static uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 		static void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
 		static void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size); // copy src buf to dst buf
