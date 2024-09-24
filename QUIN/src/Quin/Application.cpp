@@ -19,6 +19,7 @@ namespace Quin
 		IRenderer::ChooseGraphicsAPI(GRAPHICS_API::VULKAN);
 		QN_CORE_INFO("Window ptr: {0}", m_window->GetWindow());
 		IRenderer::SetupRenderer(m_window->GetWindow());
+		IRenderer::ResourceAllocate(BUFFER_TYPE::STATIC, RESOURCE_TYPE::Mesh, "Assets/FinalBaseMesh.obj");
 
 		m_running = true;
 		m_minimized = false;
@@ -70,7 +71,7 @@ namespace Quin
 				frameTime[frameIndex% frameSize] = t.Mark();
 				frameRate = 0;
 				for (int i = 0; i < frameSize; i++) { frameRate += NS_TO_S(frameTime[i])/frameSize; }
-				QN_CORE_TRACE("Frame rate: {0}", (1/frameRate));
+				//QN_CORE_TRACE("Frame rate: {0}", (1/frameRate));
 
 
 				//QN_CORE_TRACE("Sync with logic...");

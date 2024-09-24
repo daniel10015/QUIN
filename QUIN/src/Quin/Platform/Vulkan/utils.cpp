@@ -1,5 +1,6 @@
 #include <qnpch.h>
 #include "utils.h"
+#include <sstream>
 
 namespace Quin
 {
@@ -46,13 +47,13 @@ namespace Quin
 			m_fileObj.close();
 	}
 
-	std::unique_ptr<ObjData> ObjLoader::ReadFile(bool close)
+	ObjData* ObjLoader::ReadFile(bool close)
 	{
-		std::unique_ptr<ObjData> buffer = nullptr;
+		ObjData* buffer = nullptr;
 
 		QN_CORE_ASSERT(this->is_open(), "Failed to open binary file");
 
-		buffer = std::make_unique<ObjData>();
+		buffer = new ObjData;
 
 		// ----------
 		// parse data
@@ -64,29 +65,200 @@ namespace Quin
 		// skip 's' for now
 		// --- CERTAIN SKIPS -------
 		// skip all lines that start with '#' 
+
+		std::stringstream ssBuf;
+		ssBuf << m_fileObj.rdbuf();  // Read the entire file into the stringstream
+		std::string input = ssBuf.str();  // Get the content as a string
 		
+		parse_obj(input, buffer);
 
 		// finish parsing
 		if (close) { this->close(); }
 
-		return std::move(buffer);
+		return buffer;
 	}
 
-	void ObjLoader::parse_vertex(const std::string& input, std::vector<std::array<float, 3>>& vertices)
+	static std::string GetWord(const std::string& str, size_t idx)
 	{
-		// TODO
+		size_t end = idx;
+		while (end < str.size() && str[end] != ' ') { end++;  }
+		return str.substr(idx, end - idx);
 	}
 
-	void ObjLoader::parse_normal(const std::string& input, std::vector<std::array<float, 3>>& normals) 
+	// returns idx following a newline character
+	// returns -1 if no such character exists
+	static size_t GetNextLine(const std::string& str, size_t idx)
 	{
-		// TODO
+		size_t end = idx;
+		while (end < str.size() && str[end] != '\n') { end++; }
+
+		end++; // increment to next character following '\n'
+		
+		if (end >= str.size())
+		{
+			end = -1;
+		}
+
+		return end;
 	}
 
-	void ObjLoader::parse_face(const std::string& input, std::vector<unsigned int>& v_indices, std::vector<unsigned int>& n_indices) 
+	// return character after the next \n character following idx
+	// WARNING: could return a character out-of-bounds
+	static size_t pastEOL(const std::string& str, size_t idx)
 	{
-		// TODO
+		while (idx < str.size() && str[idx] != '\n') { idx++; }
+		return idx + 1;
 	}
 
+	void ObjLoader::parse_obj(const std::string& input, ObjData* data)
+	{
+		size_t idx = 0;
+		while (idx < input.size())
+		{
+			if (skipablesChar.find(input[idx]) != skipablesChar.end() || skipables.find(GetWord(input, idx)) != skipables.end())
+			{
+				// skip to EOL
+				idx = pastEOL(input, idx);
+			}
+			else
+			{
+				// pick which section to parse
+				// either a "v": vertex, "vn": vertex normal, "f": face
+				if (input.substr(idx, 2) == "vn")
+				{
+					idx = parse_normal(input, data->normals, idx);
+				}
+				else if (input.substr(idx, 1) == "v")
+				{
+					idx = parse_vertex(input, data->vertices, idx);
+				}
+				else if (input.substr(idx, 1) == "f")
+				{
+					idx = parse_face(input, data->v_indices, data->n_indices, idx);
+				}
+				else
+				{
+					QN_CORE_ASSERT(false, "syntax error in the object file");
+				}
+			}
+		}
+	}
+
+	size_t ObjLoader::parse_vertex(const std::string& input, std::vector<std::array<float, 3>>& vertices, size_t idx)
+	{
+		static const std::string whitespace = " ";
+		// consume "v" and whitespace
+		if (input[idx] == 'v') { idx++; } // skip start character
+		idx = skipWhitepace(input, idx);
+		// expect to consume 3 floats
+		uint8_t vCount = 0;
+		vertices.push_back({});
+		std::pair<size_t, float> pRet = {};
+		while (vCount < 3)
+		{
+			pRet = parse_number(input, idx, whitespace);
+			vertices.back()[vCount] = pRet.second;
+			idx = pRet.first;
+			idx = skipWhitepace(input, idx);
+			vCount++;
+		}
+		return idx;
+	}
+
+	size_t ObjLoader::parse_normal(const std::string& input, std::vector<std::array<float, 3>>& normals, size_t idx) 
+	{
+		static const std::string whitespace = " ";
+		// consume "v" and whitespace
+		if (input.substr(idx,2) == "vn") { idx+=2; } // skip start character
+		idx = skipWhitepace(input, idx);
+		// expect to consume 3 floats
+		uint8_t vCount = 0;
+		normals.push_back({});
+		std::pair<size_t, float> pRet = {};
+		while (vCount < 3)
+		{
+			pRet = parse_number(input, idx, whitespace);
+			normals.back()[vCount] = pRet.second;
+			idx = pRet.first;
+			idx = skipWhitepace(input, idx);
+			vCount++;
+		}
+		return idx;
+	}
+
+	size_t ObjLoader::parse_face(const std::string& input, std::vector<unsigned int>& v_indices, std::vector<unsigned int>& n_indices, size_t idx) 
+	{
+		static const std::string face_delim = "//";
+		static const std::string whitespace = " ";
+		// consume "v" and whitespace
+		if (input[idx] == 'f') { idx++; } // skip start character
+		idx = skipWhitepace(input, idx);
+		unsigned int firstIndex, firstNormal;
+		std::pair<size_t, float> pRet;
+		// expect to consume at least 3 vertices
+		
+		// parse first vertex
+		pRet = parse_number(input, idx, face_delim);
+		idx = pRet.first;
+		firstIndex = pRet.second;
+
+		pRet = parse_number(input, idx, whitespace);
+		idx = pRet.first;
+		firstNormal = pRet.second;
+
+		idx = skipWhitepace(input, idx);
+		std::vector<unsigned int> indicesRec;
+		std::vector<unsigned int> normalsRec;
+		while (input[idx] != '\n')
+		{
+			pRet = parse_number(input, idx, face_delim);
+			idx = pRet.first;
+			indicesRec.push_back(pRet.second);
+
+			pRet = parse_number(input, idx, whitespace);
+			idx = pRet.first;
+			normalsRec.push_back(pRet.second);
+
+			idx = skipWhitepace(input, idx);
+		}
+
+		// create triangulation fan
+		for (size_t i = 0; i < indicesRec.size() - 1; i++)
+		{
+			// push first index and pair of indices
+			v_indices.push_back(firstIndex);
+			v_indices.push_back(indicesRec.at(i));
+			v_indices.push_back(indicesRec.at(i + 1));
+
+			// push first normal and pair of normals
+			n_indices.push_back(firstNormal);
+			n_indices.push_back(normalsRec.at(i));
+			n_indices.push_back(normalsRec.at(i + 1));
+		}
+
+		return idx;
+	}
+
+	// parsers a float
+	std::pair<size_t, float> ObjLoader::parse_number(const std::string& input, size_t idx, const std::string& delim)
+	{
+		QN_CORE_ASSERT((input[idx] == '-' || (input[idx] >= '0' && input[idx] <= '9')), "first character of number is NaN");
+		size_t start = idx;
+		while (idx < input.size() && input.substr(idx, delim.size()) != delim && input.at(idx) != '\n') { idx++; }
+		return std::make_pair<size_t, float>(idx+delim.size(), stof(input.substr(start, idx - start)));
+	}
+
+	size_t ObjLoader::skipWhitepace(const std::string& input, size_t idx)
+	{
+		while (idx < input.size() && input[idx] == ' ') { idx++; }
+		return idx;
+	}
+
+	size_t ObjLoader::skipDelim(const std::string& input, size_t idx, const std::string& delim)
+	{
+		while (idx < input.size() && input.substr(idx, delim.size()) == delim) { idx++; }
+		return idx+delim.size();
+	}
 
 	// -------------------- ---------- -----
 	// -------------------- ---------- -----

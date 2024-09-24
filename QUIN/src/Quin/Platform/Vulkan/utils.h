@@ -27,18 +27,23 @@ namespace Quin
 		bool open();
 		bool open(const std::string& fileName);
 		void close();
-		std::unique_ptr<ObjData> ReadFile(bool close = true);
+		ObjData* ReadFile(bool close = true);
 		// close file buffer
 		~ObjLoader();
 	private:
 		std::string m_file;
 		std::ifstream m_fileObj;
-		const std::set<std::string> skipables = {"#", "mtllib", "usemtl", "g", "s"};
+		const std::set<std::string> skipables = {"mtllib", "usemtl"};
+		const std::set<char> skipablesChar = { '#', 'g', 's', '\n'};
 	private:
 		// parser helper functions
-		void parse_vertex(const std::string& input, std::vector<std::array<float, 3>>& vertices);
-		void parse_normal(const std::string& input, std::vector<std::array<float, 3>>& normals);
-		void parse_face(const std::string& input, std::vector<unsigned int>& v_indices, std::vector<unsigned int>& n_indices);
+		void parse_obj(const std::string& input, ObjData* data);
+		size_t parse_vertex(const std::string& input, std::vector<std::array<float, 3>>& vertices, size_t idx);
+		size_t parse_normal(const std::string& input, std::vector<std::array<float, 3>>& normals, size_t idx);
+		size_t parse_face(const std::string& input, std::vector<unsigned int>& v_indices, std::vector<unsigned int>& n_indices, size_t idx);
+		static std::pair<size_t, float> parse_number(const std::string& input, size_t idx, const std::string& delim);
+		static size_t skipWhitepace(const std::string& input, size_t idx);
+		static size_t skipDelim(const std::string& input, size_t idx, const std::string& delim);
 	};
 
 	class BinaryLoader

@@ -207,7 +207,11 @@ IF EXIST ..\bin\Dist-windows-x86_64\QUIN\QUIN.dll\ (xcopy /Q /E /Y /I ..\bin\Dis
     <ClCompile Include="src\Quin\Renderer\Renderer2D.cpp" />
     <ClCompile Include="src\Quin\Renderer\Scene2D.cpp" />
     <ClCompile Include="src\Quin\Resource System\ResourceManager.cpp" />
-    <ClCompile Include="src\Quin\qnpch.cpp" />
+    <ClCompile Include="src\Quin\qnpch.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Dist|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="src\Quin\stb_image.cpp" />
   </ItemGroup>
   <ItemGroup>

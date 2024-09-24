@@ -72,12 +72,15 @@ namespace Quin
 
 	dataInfo VulkanAPI::AllocateStaticMemory(RESOURCE_TYPE resourceType, std::string filename, uint32_t transform_size)
 	{
-		std::unique_ptr<ObjData> data;
+		ObjData* data;
 
 		if (resourceType == RESOURCE_TYPE::Mesh)
 		{
+			timer t;
+			t.start();
 			ObjLoader loadFile(filename);
 			data = loadFile.ReadFile();
+			QN_CORE_INFO("time to read file: {0}", NS_TO_S(t.peek()));
 		}
 
 		return {};

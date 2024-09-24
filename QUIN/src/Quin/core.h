@@ -17,8 +17,8 @@
 
 // asserts (use custom logging instead of actual asserts)
 #ifdef QN_ENABLE_ASSERTS
-	#define QN_ASSERT(v, msg) if(!v) { QN_ERROR("ASSERTION FAILED {0}", msg); __debugbreak(); }
-	#define QN_CORE_ASSERT(v, msg) if(!v) { QN_CORE_ERROR("ASSERTION FAILED {0}", msg); __debugbreak(); }
+	#define QN_ASSERT(v, msg) if(!(v)) { QN_ERROR("ASSERTION FAILED {0}", msg); __debugbreak(); }
+	#define QN_CORE_ASSERT(v, msg) if(!(v)) { QN_CORE_ERROR("ASSERTION FAILED {0}", msg); __debugbreak(); }
 #else
 	#define QN_ASSERT(v, msg) v;
 	#define QN_CORE_ASSERT(v, msg) v;
