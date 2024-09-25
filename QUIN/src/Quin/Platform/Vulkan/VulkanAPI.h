@@ -45,6 +45,7 @@ namespace Quin
 	{
 	public:
 		static bool Initialize(void* windowInstance);
+		// should change these to mesh and also add a texture type for this (so it won't add transforms)
 		static dataInfo AllocateStaticMemory(RESOURCE_TYPE resourceType, std::string filename, uint32_t transform_size);
 		static dataInfo AllocateDynamicMemory(RESOURCE_TYPE resourceType, std::string filename, uint32_t transform_size);
 		static void DrawFrame();
@@ -106,13 +107,13 @@ namespace Quin
 		static inline std::vector<VkSemaphore> m_renderFinishedSemaphores;
 		static inline std::vector<VkFence> m_inFlightFences;
 		// vertex and index buffer Vkmemory handles
-		static inline std::vector<VkBuffer> m_vertexBuffers;
-		static inline std::vector<VkDeviceMemory> m_vertexBuffersMemory;
-		static inline std::vector<void*> m_vertexBuffersMapped;
+		static inline std::vector<std::vector<VkBuffer>> m_vertexBuffers;
+		static inline std::vector<std::vector<VkDeviceMemory>> m_vertexBuffersMemory;
+		static inline std::vector<std::vector<void*>> m_vertexBuffersMapped;
 		static inline size_t vCount = 0;
-		static inline std::vector<VkBuffer> m_indexBuffers;
-		static inline std::vector<VkDeviceMemory> m_indexBuffersMemory;
-		static inline std::vector<void*> m_indexBuffersMapped;
+		static inline std::vector<std::vector<VkBuffer>> m_indexBuffers;
+		static inline std::vector<std::vector<VkDeviceMemory>> m_indexBuffersMemory;
+		static inline std::vector<std::vector<void*>> m_indexBuffersMapped;
 		static inline size_t iCount = 0;
 		// texture handles and variables (these will become vectors later)
 		static inline VkImage m_textureImage;
@@ -125,9 +126,9 @@ namespace Quin
 		static inline uint32_t m_texWidth, m_texHeight; // for all textures used (restrict all tex to 1 size, for now)
 		static inline VkDeviceSize m_textureImageSize;
 		// have as many uniform buffers as we have frames in flight
-		static inline std::vector<VkBuffer> m_uniformBuffers;
-		static inline std::vector<VkDeviceMemory> m_uniformBuffersMemory;
-		static inline std::vector<void*> m_uniformBuffersMapped;
+		static inline std::vector<std::vector<VkBuffer>> m_uniformBuffers;
+		static inline std::vector<std::vector<VkDeviceMemory>> m_uniformBuffersMemory;
+		static inline std::vector<std::vector<void*>> m_uniformBuffersMapped;
 		static inline bool m_uniformDataSent = false;
 
 		static inline VkDescriptorPool m_descriptorPool;
@@ -188,10 +189,10 @@ namespace Quin
 		static VkPipelineColorBlendAttachmentState EnableAlphaBlending();
 		// frame/vertex buffers
 		static void CreateFrameBuffers();
-		static void CreateVertexBuffer();
-		static void CreateIndexBuffer();
+		static void CreateVertexBuffer(ObjData* data, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties);
+		static void CreateIndexBuffer(ObjData* data, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties);
 		// functions for uniform buffers
-		static void CreateUniformBuffers();
+		static void CreateUniformBuffers(uint32_t transforms);
 		static void CreateDescriptorPool();
 		static void CreateDescriptorSets();
 		// command buffer functions

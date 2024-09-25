@@ -144,7 +144,7 @@ namespace Quin
 		}
 	}
 
-	size_t ObjLoader::parse_vertex(const std::string& input, std::vector<std::array<float, 3>>& vertices, size_t idx)
+	size_t ObjLoader::parse_vertex(const std::string& input, std::vector<glm::vec3>& vertices, size_t idx)
 	{
 		static const std::string whitespace = " ";
 		// consume "v" and whitespace
@@ -165,7 +165,7 @@ namespace Quin
 		return idx;
 	}
 
-	size_t ObjLoader::parse_normal(const std::string& input, std::vector<std::array<float, 3>>& normals, size_t idx) 
+	size_t ObjLoader::parse_normal(const std::string& input, std::vector<glm::vec3>& normals, size_t idx)
 	{
 		static const std::string whitespace = " ";
 		// consume "v" and whitespace

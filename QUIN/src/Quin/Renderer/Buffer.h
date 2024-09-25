@@ -6,10 +6,10 @@ struct vertex3D
 {
 	glm::vec3 position;
 	glm::vec3 normal;
-	glm::vec2 texCoord;
-	glm::vec2 normalCoord;
+	glm::vec2 texMapCoord;
+	glm::vec2 normMapCoord;
+	float textureMapSerial;
 	float normalMapSerial;
-	float textureSerial;
 
 	static VkVertexInputBindingDescription getBindingDescription()
 	{
@@ -25,41 +25,41 @@ struct vertex3D
 	static std::array<VkVertexInputAttributeDescription, 6> getAttributeDescriptions()
 	{
 		std::array<VkVertexInputAttributeDescription, 6> attributeDescriptions{};
-		// position data format
+		// vec3 position data format
 		attributeDescriptions[0].binding = 0;
 		attributeDescriptions[0].location = 0;
 		attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
 		attributeDescriptions[0].offset = offsetof(vertex3D, position);
 
-		// normal data format
+		// vec3 normal data format
 		attributeDescriptions[1].binding = 0;
 		attributeDescriptions[1].location = 0;
 		attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
 		attributeDescriptions[1].offset = offsetof(vertex3D, normal);
 
-		// texture data format
+		// vec2 texture coordinate format
 		attributeDescriptions[2].binding = 0;
 		attributeDescriptions[2].location = 2;
 		attributeDescriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
-		attributeDescriptions[2].offset = offsetof(vertex3D, normalCoord);
+		attributeDescriptions[2].offset = offsetof(vertex3D, texMapCoord);
 
-		// texture data format
+		// vec2 normal coordinate format
 		attributeDescriptions[3].binding = 0;
 		attributeDescriptions[3].location = 3;
-		attributeDescriptions[3].format = VK_FORMAT_R32_SFLOAT;
-		attributeDescriptions[3].offset = offsetof(vertex3D, normalMapSerial);
+		attributeDescriptions[3].format = VK_FORMAT_R32G32_SFLOAT;
+		attributeDescriptions[3].offset = offsetof(vertex3D, normMapCoord);
 
-		// texture data format
+		// float texture data format
 		attributeDescriptions[4].binding = 0;
 		attributeDescriptions[4].location = 2;
-		attributeDescriptions[4].format = VK_FORMAT_R32G32_SFLOAT;
-		attributeDescriptions[4].offset = offsetof(vertex3D, texCoord);
+		attributeDescriptions[4].format = VK_FORMAT_R32_SFLOAT;
+		attributeDescriptions[4].offset = offsetof(vertex3D, textureMapSerial);
 
-		// texture data format
+		// float texture data format
 		attributeDescriptions[5].binding = 0;
 		attributeDescriptions[5].location = 3;
 		attributeDescriptions[5].format = VK_FORMAT_R32_SFLOAT;
-		attributeDescriptions[5].offset = offsetof(vertex3D, textureSerial);
+		attributeDescriptions[5].offset = offsetof(vertex3D, normalMa[Serial);
 
 		return attributeDescriptions;
 	}

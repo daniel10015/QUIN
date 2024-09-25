@@ -4,6 +4,9 @@
 #include <GLFW/glfw3.h>
 #include "utils.h"
 
+#define VMA_IMPLEMENTATION
+#include "vk_mem_alloc.h"
+
 #ifdef QN_DEBUG 
 	#define SET_VALIDATION SetValidationLayers()
 	#define SETUP_DEBUG SetupDebugMessenger();
@@ -60,8 +63,8 @@ namespace Quin
 		//CreateVertexBuffer();
 		//CreateIndexBuffer();//
 		//CreateUniformBuffers();
-		//CreateDescriptorPool();
-		//CreateDescriptorSets();
+		CreateDescriptorPool();
+		CreateDescriptorSets();
 		// create command/semaphores
 		CreateCommandBuffers();
 		CreateSyncObjects();
@@ -80,7 +83,13 @@ namespace Quin
 			t.start();
 			ObjLoader loadFile(filename);
 			data = loadFile.ReadFile();
-			QN_CORE_INFO("time to read file: {0}", NS_TO_S(t.peek()));
+			// create vertex buffer
+			CreateVertexBuffer(data, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+			// create index buffer
+			CreateIndexBuffer(data, VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+			// create uniforms
+			CreateUniformBuffers(transform_size);
+			QN_CORE_INFO("time to load data from file to GPU memory: {0}", NS_TO_S(t.peek()));
 		}
 
 		return {};
@@ -755,6 +764,85 @@ namespace Quin
 		}
 	}
 
+	void VulkanAPI::CreateVertexBuffer(ObjData* data, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties) 
+	{
+		// combine vertices and normals
+		std::vector<vertex3D> dat; // holds the actual vertex data
+		for (size_t idx = 0; idx < data->n_indices.size(); idx++)
+		{
+			dat.push_back({});
+			dat.back().position = data->vertices[data->n_indices[idx]];
+			// not all data has normals
+			if (idx < data->n_indices.size())
+			{
+				dat.back().normal = data->normals[data->n_indices[idx]];
+			}
+			// TODO handle cases of textures and normal maps
+		}
+
+		VkDeviceSize buffSize = sizeof(sizeof(vertex3D) * dat.size());
+		QN_CORE_INFO("Vertex Buffer size: {0}", (size_t)buffSize);
+
+		m_vertexBuffers.resize(MAX_FRAMES_IN_FLIGHT);
+		m_vertexBuffersMemory.resize(MAX_FRAMES_IN_FLIGHT);
+		m_vertexBuffersMapped.resize(MAX_FRAMES_IN_FLIGHT);
+		for (unsigned int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+		{
+			m_vertexBuffers.push_back({});
+			m_vertexBuffersMemory.push_back({});
+			m_vertexBuffersMapped.push_back({});
+
+			// stage vertex buffer in CPU accessible on the GPU
+			CreateBuffer(buffSize, usage, properties, m_vertexBuffers[i].back(), m_vertexBuffersMemory[i].back());
+			// map memory
+			vkMapMemory(m_device, m_vertexBuffersMemory[i].back(), 0, buffSize, 0, &m_vertexBuffersMapped[i].back());
+			memcpy(m_vertexBuffersMapped[i].back(), dat.data(), (size_t)buffSize);
+		}
+	}
+
+	void VulkanAPI::CreateIndexBuffer(ObjData* data, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties)
+	{
+		// combine vertices and normals
+
+		VkDeviceSize buffSize = sizeof(sizeof(data->v_indices.at(0)) * data->v_indices.size());
+		QN_CORE_INFO("Vertex Buffer size: {0}", (size_t)buffSize);
+
+		m_indexBuffers.resize(MAX_FRAMES_IN_FLIGHT);
+		m_indexBuffersMemory.resize(MAX_FRAMES_IN_FLIGHT);
+		m_indexBuffersMapped.resize(MAX_FRAMES_IN_FLIGHT);
+		for (unsigned int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+		{
+			m_indexBuffers.push_back({});
+			m_indexBuffersMemory.push_back({});
+			m_indexBuffersMapped.push_back({});
+			// stage vertex buffer in CPU accessible on the GPU
+			CreateBuffer(buffSize, usage, properties, m_indexBuffers[i].back(), m_indexBuffersMemory[i].back());
+			// map memory
+			vkMapMemory(m_device, m_indexBuffersMemory[i].back(), 0, buffSize, 0, &m_indexBuffersMapped[i].back());
+			memcpy(m_indexBuffersMapped[i].back(), data->v_indices.data(), (size_t)buffSize);
+		}
+	}
+
+	void VulkanAPI::CreateUniformBuffers(uint32_t transforms)
+	{
+		// transform
+		VkDeviceSize size = sizeof(glm::mat4);
+
+		m_uniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
+		m_uniformBuffersMemory.resize(MAX_FRAMES_IN_FLIGHT);
+		m_uniformBuffersMapped.resize(MAX_FRAMES_IN_FLIGHT);
+
+		for (unsigned int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+		{
+			m_uniformBuffers[i].push_back({});
+			m_uniformBuffersMemory[i].push_back({});
+			m_uniformBuffersMapped[i].push_back({});
+
+			CreateBuffer(size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, m_uniformBuffers[i].back(), m_uniformBuffersMemory[i].back());
+			vkMapMemory(m_device, m_uniformBuffersMemory[i].back(), 0, size, 0, &m_uniformBuffersMapped[i].back());
+		}
+	}
+
 	void VulkanAPI::CreateCommandPool()
 	{
 		QueueFamilyIndices queueFamilyIndices = FindQueueFamilies(m_physicalDevice);
@@ -1111,6 +1199,28 @@ namespace Quin
 		vkDestroySwapchainKHR(m_device, m_swapChain, nullptr);
 	}
 
+	void VulkanAPI::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory) {
+		VkBufferCreateInfo buffInfo{};
+		buffInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+		buffInfo.size = size;
+		buffInfo.usage = usage;
+		buffInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+		QN_CORE_ASSERT(vkCreateBuffer(m_device, &buffInfo, nullptr, &buffer) == VK_SUCCESS, "Failed to create vertex buffer!");
+
+		VkMemoryRequirements memRequirements;
+		vkGetBufferMemoryRequirements(m_device, buffer, &memRequirements);
+
+		VkMemoryAllocateInfo allocInfo{};
+		allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+		allocInfo.allocationSize = memRequirements.size;
+		allocInfo.memoryTypeIndex = FindMemoryType(memRequirements.memoryTypeBits, properties);
+
+		QN_CORE_ASSERT(vkAllocateMemory(m_device, &allocInfo, nullptr, &bufferMemory) == VK_SUCCESS, "Failed to allocate memory!");
+
+		vkBindBufferMemory(m_device, buffer, bufferMemory, 0);
+	}
+
 	// later when we want to modularize multiple scenes
 	// in one project we'll want to give the ability to
 	// clear buffers without destroying vulkan itself
@@ -1126,8 +1236,11 @@ namespace Quin
 		vkFreeMemory(m_device, m_textureImageMemory, nullptr);
 
 		for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-			vkDestroyBuffer(m_device, m_uniformBuffers[i], nullptr);
-			vkFreeMemory(m_device, m_uniformBuffersMemory[i], nullptr);
+			for (size_t j = 0; j < m_uniformBuffers.size(); j++)
+			{
+				vkDestroyBuffer(m_device, m_uniformBuffers[i][j], nullptr);
+				vkFreeMemory(m_device, m_uniformBuffersMemory[i][j], nullptr);
+			}
 		}
 		// automatically destroys descriptor sets
 		vkDestroyDescriptorSetLayout(m_device, m_descriptorSetLayout, nullptr);

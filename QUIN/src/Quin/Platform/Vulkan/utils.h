@@ -2,6 +2,7 @@
 #include <fstream>
 #include <string>
 #include <set>
+#include <Renderer/QuinMath.h>
 
 namespace Quin
 {
@@ -10,8 +11,8 @@ namespace Quin
 	// and at runtime pick the reader
 	struct ObjData
 	{
-		std::vector<std::array<float, 3>> vertices;
-		std::vector<std::array<float, 3>> normals;
+		std::vector<glm::vec3> vertices;
+		std::vector<glm::vec3> normals;
 		std::vector<unsigned int> v_indices;
 		std::vector<unsigned int> n_indices;
 	};
@@ -38,8 +39,8 @@ namespace Quin
 	private:
 		// parser helper functions
 		void parse_obj(const std::string& input, ObjData* data);
-		size_t parse_vertex(const std::string& input, std::vector<std::array<float, 3>>& vertices, size_t idx);
-		size_t parse_normal(const std::string& input, std::vector<std::array<float, 3>>& normals, size_t idx);
+		size_t parse_vertex(const std::string& input, std::vector<glm::vec3>& vertices, size_t idx);
+		size_t parse_normal(const std::string& input, std::vector<glm::vec3>& normals, size_t idx);
 		size_t parse_face(const std::string& input, std::vector<unsigned int>& v_indices, std::vector<unsigned int>& n_indices, size_t idx);
 		static std::pair<size_t, float> parse_number(const std::string& input, size_t idx, const std::string& delim);
 		static size_t skipWhitepace(const std::string& input, size_t idx);
