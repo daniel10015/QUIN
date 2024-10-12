@@ -2,6 +2,9 @@
 #include "utils.h"
 #include <sstream>
 
+#include <filesystem>
+#define PRINT_SYSTEM_PATH std::cout<<"Current working directory: "<<std::filesystem::current_path()<<std::endl
+
 namespace Quin
 {
 
@@ -226,14 +229,19 @@ namespace Quin
 		for (size_t i = 0; i < indicesRec.size() - 1; i++)
 		{
 			// push first index and pair of indices
-			v_indices.push_back(firstIndex);
-			v_indices.push_back(indicesRec.at(i));
-			v_indices.push_back(indicesRec.at(i + 1));
+			v_indices.push_back(firstIndex-1);
+			v_indices.push_back(indicesRec.at(i)-1);
+			v_indices.push_back(indicesRec.at(i + 1)-1);
 
 			// push first normal and pair of normals
-			n_indices.push_back(firstNormal);
-			n_indices.push_back(normalsRec.at(i));
-			n_indices.push_back(normalsRec.at(i + 1));
+			n_indices.push_back(firstNormal-1);
+			n_indices.push_back(normalsRec.at(i)-1);
+			n_indices.push_back(normalsRec.at(i + 1)-1);
+			// if (firstNormal > 0x1500)
+			// {
+			// 	QN_CORE_TRACE("normIdx: {0}", firstNormal);
+			// }
+			QN_ASSERT(firstNormal < 30000 && normalsRec.at(i) < 30000 && normalsRec.at(i+1) < 30000, "bad parse");
 		}
 
 		return idx;
@@ -302,6 +310,10 @@ namespace Quin
 
 	std::vector<char> BinaryLoader::ReadFile(bool close)
 	{
+		PRINT_SYSTEM_PATH;
+
+		QN_CORE_INFO("Attempting to open {0}", this->m_file);
+
 		QN_CORE_ASSERT(this->is_open(), "Failed to open binary file");
 
 		size_t fileSize = (size_t)m_fileObj.tellg();

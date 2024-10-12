@@ -20,6 +20,8 @@
 // rendering
 //#include "Quin/Renderer/Scene2D.h"
 #include "Quin/Particle System/ParticleSystem.h"
+#include "Quin/Renderer/Renderer.h"
+#include "Quin/Renderer/Camera.h"
 // system
 #include "Quin/Resource System/ECS.h"
 

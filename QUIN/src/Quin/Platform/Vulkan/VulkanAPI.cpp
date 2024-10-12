@@ -3,9 +3,10 @@
 #include <set>
 #include <GLFW/glfw3.h>
 #include "utils.h"
+#include <filesystem>
+#define PRINT_SYSTEM_PATH std::cout<<"Current working directory: "<<std::filesystem::current_path()<<std::endl
 
-#define VMA_IMPLEMENTATION
-#include "vk_mem_alloc.h"
+#define NAIVE_UNIFORM_ALLOCATION
 
 #ifdef QN_DEBUG 
 	#define SET_VALIDATION SetValidationLayers()
@@ -19,7 +20,7 @@
 
 namespace Quin
 {
-	const static int MAX_FRAMES_IN_FLIGHT = 2;
+	const static int MAX_FRAMES_IN_FLIGHT = MAX_FRAMES_IN_FLIGHT_MAC;
 	static constexpr bool isPowerOfTwo(unsigned int x) {
 		return (x != 0) && ((x & (x - 1)) == 0);
 	}
@@ -37,6 +38,16 @@ namespace Quin
 	bool VulkanAPI::Initialize(void* windowInstance) 
 	{
 		QN_CORE_INFO("Initializing Vulkan");
+
+		m_uniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
+		m_uniformAllocations.resize(MAX_FRAMES_IN_FLIGHT);
+		m_uniformBufferMapped.resize(MAX_FRAMES_IN_FLIGHT);
+
+		m_vertexBuffers.resize(MAX_FRAMES_IN_FLIGHT);
+		m_vertexAllocations.resize(MAX_FRAMES_IN_FLIGHT);
+		// buffers only matter for dynamic not static data
+
+
 		m_window = windowInstance;
 		bool inst = CreateInstance(); QN_CORE_ASSERT(inst, "Could not create vulkan instance");
 		bool valid = SET_VALIDATION;  QN_CORE_ASSERT(valid, "validation layers requested, but not available!");
@@ -52,8 +63,10 @@ namespace Quin
 		// pass in some default shader programs for now
 		Create3DGraphicsPipeline("../QUIN/src/QUIN/Renderer/Shaders/vert.spv", "../QUIN/src/QUIN/Renderer/Shaders/frag.spv");
 		// TODO create2DGraphicsPipeline(), createShadowMappingPipeline()
+		CreateDepthResource();
 		CreateFrameBuffers();
 		CreateCommandPool();
+		CreateVMAObject();
 
 		// should happen when flushing the allocation
 		//CreateTextureImage();
@@ -64,7 +77,8 @@ namespace Quin
 		//CreateIndexBuffer();//
 		//CreateUniformBuffers();
 		CreateDescriptorPool();
-		CreateDescriptorSets();
+		// now we create a desccriptor set per set of transforms created
+		// CreateDescriptorSets();
 		// create command/semaphores
 		CreateCommandBuffers();
 		CreateSyncObjects();
@@ -73,9 +87,10 @@ namespace Quin
 		return inst && valid;
 	}
 
-	dataInfo VulkanAPI::AllocateStaticMemory(RESOURCE_TYPE resourceType, std::string filename, uint32_t transform_size)
+	dataInfo* VulkanAPI::AllocateStaticMemory(RESOURCE_TYPE resourceType, std::string filename, uint32_t transform_size)
 	{
 		ObjData* data;
+		dataInfo* info = new dataInfo();
 
 		if (resourceType == RESOURCE_TYPE::Mesh)
 		{
@@ -83,21 +98,33 @@ namespace Quin
 			t.start();
 			ObjLoader loadFile(filename);
 			data = loadFile.ReadFile();
+			
+			Renderable renderObj = {};
+
 			// create vertex buffer
-			CreateVertexBuffer(data, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+			CreateVertexBuffer(renderObj, data, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+
 			// create index buffer
-			CreateIndexBuffer(data, VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+			CreateIndexBuffer(renderObj, data, VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 			// create uniforms
-			CreateUniformBuffers(transform_size);
+			CreateUniformBuffers(renderObj, transform_size);
 			QN_CORE_INFO("time to load data from file to GPU memory: {0}", NS_TO_S(t.peek()));
+
+
+			m_renderables.push_back(renderObj);
+
+			CreateDescriptorSet(0);
 		}
 
-		return {};
+		info->transformsSize = m_renderables.back().transformsCapacity;
+		memcpy(info, &(m_renderables.back().transforms), sizeof(VkDeviceMemory) * MAX_FRAMES_IN_FLIGHT_MAC);
+		
+		return info;
 	}
 
-	dataInfo VulkanAPI::AllocateDynamicMemory(RESOURCE_TYPE resourceType, std::string filename, uint32_t transform_size) 
+	dataInfo* VulkanAPI::AllocateDynamicMemory(RESOURCE_TYPE resourceType, std::string filename, uint32_t transform_size) 
 	{
-		return {};
+		return nullptr;
 	}
 
 	// need to make this MUCH smaller 
@@ -166,6 +193,12 @@ namespace Quin
 		//QN_CORE_TRACE("draw frame took: {0}", m_renderingTime.Mark());
 	}
 
+	void VulkanAPI::UpdateTransform(const glm::mat4& srcTransform, glm::mat4& dstTransform)
+	{
+		dstTransform = m_cameras.at(m_currentCamera).m_projectionModelViewMatrix * srcTransform;
+		QN_CORE_INFO("updated transform: {0}", dstTransform[1][1]);
+	}
+
 	// command buffers
 	void VulkanAPI::CreateCommandBuffers()
 	{
@@ -215,9 +248,12 @@ namespace Quin
 		renderPassInfo.renderArea.offset = { 0, 0 };
 		renderPassInfo.renderArea.extent = swapChainExtent;
 
-		VkClearValue clearColor = { {{0.0f, 0.0f, 0.0f, 1.0f}} };
-		renderPassInfo.clearValueCount = 1;
-		renderPassInfo.pClearValues = &clearColor;
+		std::array<VkClearValue, 2> clearValues{};
+		clearValues[0].color = { {0.0f, 0.0f, 0.0f, 1.0f} }; // clear color
+		clearValues[1].depthStencil = { 1.0f, 0 }; // clear depth and stencil
+
+		renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+		renderPassInfo.pClearValues = clearValues.data();
 
 		// start render pass
 		vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
@@ -226,13 +262,13 @@ namespace Quin
 		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphics3DPipeline);
 
 		// bind vertex buffer 
-		/*
-		VkBuffer vertexBuffers[] = { m_vertexBuffers[currentFrame] };
+		VkBuffer vertexBuffers[] = { m_vertexBuffers[0][0]};
 		VkDeviceSize offsets[] = { 0 }; // need to create vars to store offset data for arbitrary vBuf
 		vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
 		// bind index buffer
-		vkCmdBindIndexBuffer(commandBuffer, m_indexBuffers[currentFrame], 0, VK_INDEX_TYPE_UINT32);
-		*/
+		vkCmdBindIndexBuffer(commandBuffer, m_indexBuffers[0][0], 0, VK_INDEX_TYPE_UINT32);
+		
+		
 
 		// since we set viewport and scissor to be dynamic (for now) we must set them in the command buffer
 		VkViewport viewport{};
@@ -250,13 +286,15 @@ namespace Quin
 		vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
 		// update uniform buffer
-		//memcpy(m_uniformBuffersMapped[currentFrame], &m_modelViewProjectionMatrix, sizeof(glm::mat4));
+		// memcpy(m_renderables[0].transforms[currentFrame], &m_modelViewProjectionMatrix, sizeof(glm::mat4));
 		// bind descriptor sets (for uniform buffer)
-		//vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelineLayout, 0, 1, &(m_descriptorSets[currentFrame]), 0, nullptr);
+		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelineLayout, 0, 1, &(m_descriptorSets[0][currentFrame]), 0, nullptr);
+
 
 		// draw call
-		vkCmdDraw(commandBuffer, 3, 1, 0, 0);
-		//vkCmdDrawIndexed(commandBuffer, 3, 1, 0, 0, 0);
+		//vkCmdDraw(commandBuffer, 3, 1, 0, 0);
+		vkCmdDrawIndexed(commandBuffer, m_renderables[0].indicesSize, 1, 0, 0, 0);
+		QN_CORE_TRACE("indices: {0}", m_renderables[0].indicesSize);
 		//QN_CORE_TRACE("indicies drawn: {0}", iCount);
 
 		// end render pass (no more draw calls with this render pass)
@@ -426,53 +464,21 @@ namespace Quin
 		swapChainExtent = extent;
 	}
 
-	void VulkanAPI::CreateImageViews()
+	void VulkanAPI::CreateVMAObject()
 	{
-		m_swapChainImageViews.resize(m_swapChainImages.size());
+		VmaVulkanFunctions vulkanFunctions = {};
+		vulkanFunctions.vkGetInstanceProcAddr = &vkGetInstanceProcAddr;
+		vulkanFunctions.vkGetDeviceProcAddr = &vkGetDeviceProcAddr;
 
-		QN_CORE_INFO("swap chain size: {0}", m_swapChainImages.size());
+		VmaAllocatorCreateInfo allocatorCreateInfo = {};
+		allocatorCreateInfo.flags = VMA_ALLOCATOR_CREATE_EXT_MEMORY_BUDGET_BIT;
+		allocatorCreateInfo.vulkanApiVersion = VK_API_VERSION_1_2;
+		allocatorCreateInfo.physicalDevice = m_physicalDevice;
+		allocatorCreateInfo.device = m_device;
+		allocatorCreateInfo.instance = m_instance;
+		allocatorCreateInfo.pVulkanFunctions = &vulkanFunctions;
 
-		// create image view for all images
-		for (unsigned int i = 0; i < m_swapChainImageViews.size(); i++)
-		{
-			QN_CORE_INFO("Create Image View: line {0}", __LINE__);
-			m_swapChainImageViews[i] = CreateImageView(m_swapChainImages[i], swapChainImageFormat, VK_IMAGE_VIEW_TYPE_2D, 1);
-		}
-	}
-
-	VkImageView VulkanAPI::CreateImageView(VkImage image, VkFormat format, VkImageViewType viewType, uint32_t layerCount)
-	{
-		VkImageViewCreateInfo createInfo{};
-		createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-		createInfo.image = image;
-		// treat images as 1D textures, 2D textures, 3D textures and cube maps
-		createInfo.viewType = viewType;
-		createInfo.format = format;
-		// can swizzle color channels around, leave as default
-		createInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
-		createInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
-		createInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
-		createInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
-
-		createInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-		createInfo.subresourceRange.baseMipLevel = 0; // no mipmapping for now
-		createInfo.subresourceRange.levelCount = 1;
-
-		// ----- FOR VR SUPPORT -----
-		// If you were working on a stereographic 3D application, 
-		// then you would create a swap chain with multiple layers. 
-		// You could then create multiple image views for each image 
-		// representing the views for the left and right eyes by 
-		// accessing different layers.
-		createInfo.subresourceRange.baseArrayLayer = 0;
-		createInfo.subresourceRange.layerCount = layerCount;
-		QN_CORE_INFO("VkImageViewCreateInfo, layerCount: {0}", (uint32_t)m_texturePixelsArray.size());
-
-		VkImageView imageView;
-		QN_CORE_ASSERT(vkCreateImageView(m_device, &createInfo, nullptr, &imageView) == VK_SUCCESS, "Could not create Swap Chain Image View!");
-
-		// return copy of image view
-		return imageView;
+		vmaCreateAllocator(&allocatorCreateInfo, &m_vulkanMemoryAllocator);
 	}
 
 	void VulkanAPI::CreateDescriptorSetLayout()
@@ -539,10 +545,10 @@ namespace Quin
 
 		VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
 		vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-		vertexInputInfo.vertexBindingDescriptionCount = 0x0;// 1;
-		vertexInputInfo.pVertexBindingDescriptions = 0x0;//&bindingDescription; // Optional
-		vertexInputInfo.vertexAttributeDescriptionCount = 0x0;//static_cast<uint32_t>(attributeDescriptions.size());
-		vertexInputInfo.pVertexAttributeDescriptions = 0x0;//attributeDescriptions.data(); // Optional
+		vertexInputInfo.vertexBindingDescriptionCount = 1;
+		vertexInputInfo.pVertexBindingDescriptions = &bindingDescription; // Optional
+		vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
+		vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data(); // Optional
 
 		// input type
 		VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
@@ -636,6 +642,20 @@ namespace Quin
 
 		QN_CORE_ASSERT(vkCreatePipelineLayout(m_device, &pipelineLayoutInfo, nullptr, &m_pipelineLayout) == VK_SUCCESS, "failed to create pipeline layout!");
 
+		// enable depth testing
+		VkPipelineDepthStencilStateCreateInfo depthStencil{};
+		depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+		depthStencil.depthTestEnable = VK_TRUE;
+		depthStencil.depthWriteEnable = VK_TRUE;
+		depthStencil.depthCompareOp = VK_COMPARE_OP_LESS;
+		// can be used to constrict to smaller bounds
+		depthStencil.depthBoundsTestEnable = VK_FALSE; 
+		depthStencil.maxDepthBounds = 1.0f; // optional
+		depthStencil.minDepthBounds = 0.0f; // optional
+		depthStencil.stencilTestEnable = VK_FALSE;
+		depthStencil.front = {}; // Optional
+		depthStencil.back = {}; // Optional
+
 		//VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO
 		// create pipeline
 		VkGraphicsPipelineCreateInfo pipelineInfo{};
@@ -651,7 +671,7 @@ namespace Quin
 		pipelineInfo.pDepthStencilState = nullptr; // Optional
 		pipelineInfo.pColorBlendState = &colorBlending;
 		pipelineInfo.pDynamicState = &dynamicState;
-
+		pipelineInfo.pDepthStencilState = &depthStencil;
 		pipelineInfo.layout = m_pipelineLayout;
 		pipelineInfo.renderPass = m_renderPass;
 		pipelineInfo.subpass = 0;
@@ -715,24 +735,44 @@ namespace Quin
 		colorAttachmentRef.attachment = 0;
 		colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
+		VkAttachmentDescription depthAttachment{};
+		depthAttachment.format = findDepthFormat();
+		depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+		depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+		depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+		depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+		VkAttachmentReference depthAttachmentRef{};
+		depthAttachmentRef.attachment = 1;
+		depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
 		VkSubpassDescription subpass{};
 		subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
 		subpass.colorAttachmentCount = 1;
 		subpass.pColorAttachments = &colorAttachmentRef;
+		subpass.pDepthStencilAttachment = &depthAttachmentRef;
+
 
 		// dependency for renderpass info
 		VkSubpassDependency dependency{};
 		dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
 		dependency.dstSubpass = 0; // index of subpass
-		dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT; // stage to wait on
+		// extend our subpass dependencies to make sure that there is no conflict between 
+		// the transitioning of the depth image and it being cleared as part of its load operation
+		dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
 		dependency.srcAccessMask = 0;
-		dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-		dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+		dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+		dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
 
+
+		std::array<VkAttachmentDescription, 2> attachments = { colorAttachment, depthAttachment };
 		VkRenderPassCreateInfo renderPassInfo{};
 		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-		renderPassInfo.attachmentCount = 1;
-		renderPassInfo.pAttachments = &colorAttachment;
+		renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+		renderPassInfo.pAttachments = attachments.data();
 		renderPassInfo.subpassCount = 1;
 		renderPassInfo.pSubpasses = &subpass;
 		// add dependency
@@ -749,28 +789,28 @@ namespace Quin
 
 		for (unsigned int i = 0; i < m_swapChainImageViews.size(); i++)
 		{
-			VkImageView attachments[] = { m_swapChainImageViews[i] };
+			std::array<VkImageView, 2> attachments = { m_swapChainImageViews[i], m_depthImageView };
 
 			VkFramebufferCreateInfo frameBufferInfo{};
 			frameBufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
 			frameBufferInfo.renderPass = m_renderPass;
 			frameBufferInfo.height = swapChainExtent.height;
 			frameBufferInfo.width = swapChainExtent.width;
-			frameBufferInfo.attachmentCount = 1;
-			frameBufferInfo.pAttachments = attachments;
+			frameBufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+			frameBufferInfo.pAttachments = attachments.data();
 			frameBufferInfo.layers = 1;
 
 			QN_CORE_ASSERT(vkCreateFramebuffer(m_device, &frameBufferInfo, nullptr, &m_swapChainFramebuffers[i]) == VK_SUCCESS, "Failed to create Frame Buffers!");
 		}
 	}
 
-	void VulkanAPI::CreateVertexBuffer(ObjData* data, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties) 
+	void VulkanAPI::CreateVertexBuffer(Renderable& renderObj, ObjData* data, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties)
 	{
 		// combine vertices and normals
 		std::vector<vertex3D> dat; // holds the actual vertex data
 		for (size_t idx = 0; idx < data->n_indices.size(); idx++)
 		{
-			dat.push_back({});
+			dat.emplace_back();
 			dat.back().position = data->vertices[data->n_indices[idx]];
 			// not all data has normals
 			if (idx < data->n_indices.size())
@@ -780,67 +820,334 @@ namespace Quin
 			// TODO handle cases of textures and normal maps
 		}
 
-		VkDeviceSize buffSize = sizeof(sizeof(vertex3D) * dat.size());
+		VkDeviceSize buffSize = sizeof(vertex3D) * dat.size();
 		QN_CORE_INFO("Vertex Buffer size: {0}", (size_t)buffSize);
 
-		m_vertexBuffers.resize(MAX_FRAMES_IN_FLIGHT);
-		m_vertexBuffersMemory.resize(MAX_FRAMES_IN_FLIGHT);
-		m_vertexBuffersMapped.resize(MAX_FRAMES_IN_FLIGHT);
-		for (unsigned int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
-		{
-			m_vertexBuffers.push_back({});
-			m_vertexBuffersMemory.push_back({});
-			m_vertexBuffersMapped.push_back({});
+		renderObj.verticesSize = dat.size();
+		
 
-			// stage vertex buffer in CPU accessible on the GPU
-			CreateBuffer(buffSize, usage, properties, m_vertexBuffers[i].back(), m_vertexBuffersMemory[i].back());
-			// map memory
-			vkMapMemory(m_device, m_vertexBuffersMemory[i].back(), 0, buffSize, 0, &m_vertexBuffersMapped[i].back());
-			memcpy(m_vertexBuffersMapped[i].back(), dat.data(), (size_t)buffSize);
+		// create staging buffer
+		VkBufferCreateInfo bufCreateInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
+		bufCreateInfo.size = buffSize;
+		bufCreateInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+
+		VmaAllocationCreateInfo allocCreateInfo = {};
+		allocCreateInfo.usage = VMA_MEMORY_USAGE_AUTO;
+		allocCreateInfo.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT |
+			VMA_ALLOCATION_CREATE_MAPPED_BIT;
+
+		VkBuffer buf;
+		VmaAllocation alloc;
+		VmaAllocationInfo allocInfo;
+		vmaCreateBuffer(m_vulkanMemoryAllocator, &bufCreateInfo, &allocCreateInfo, &buf, &alloc, &allocInfo);
+		memcpy(allocInfo.pMappedData, dat.data(), buffSize);
+
+		for (unsigned int i = 0; i < 1; i++)
+		{
+			m_vertexBuffers[i].push_back({});
+			m_vertexAllocations[i].push_back({});
+
+			VkBufferCreateInfo bufferInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
+			bufferInfo.size = buffSize;
+			bufferInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+
+			VmaAllocationCreateInfo allocInfo = {};
+			allocInfo.usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
+			VmaAllocationInfo info;
+
+			QN_CORE_ASSERT(vmaCreateBuffer(m_vulkanMemoryAllocator, &bufferInfo, &allocInfo, &m_vertexBuffers[i].back(), &m_vertexAllocations[i].back(), &info) == VK_SUCCESS, "Failed to create vertex buffer!");
+			
+			CopyBuffer(buf, m_vertexBuffers[i].back(), buffSize);
+
+			renderObj.pVertices = info.deviceMemory;
 		}
+
+		// destroy staging buffer
+		vmaDestroyBuffer(m_vulkanMemoryAllocator, buf, alloc);
 	}
 
-	void VulkanAPI::CreateIndexBuffer(ObjData* data, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties)
+	void VulkanAPI::CreateIndexBuffer(Renderable& renderObj, ObjData* data, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties)
 	{
-		// combine vertices and normals
+		// index buf
+		renderObj.indicesSize = data->v_indices.size();
 
-		VkDeviceSize buffSize = sizeof(sizeof(data->v_indices.at(0)) * data->v_indices.size());
-		QN_CORE_INFO("Vertex Buffer size: {0}", (size_t)buffSize);
+		VkDeviceSize buffSize = sizeof(data->v_indices.at(0)) * data->v_indices.size();
+		QN_CORE_INFO("Index Buffer size: {0}", (size_t)buffSize);
 
 		m_indexBuffers.resize(MAX_FRAMES_IN_FLIGHT);
-		m_indexBuffersMemory.resize(MAX_FRAMES_IN_FLIGHT);
-		m_indexBuffersMapped.resize(MAX_FRAMES_IN_FLIGHT);
-		for (unsigned int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+		m_indexAllocations.resize(MAX_FRAMES_IN_FLIGHT);
+
+		// create staging buffer
+		VkBufferCreateInfo bufCreateInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
+		bufCreateInfo.size = buffSize;
+		bufCreateInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+
+		VmaAllocationCreateInfo allocCreateInfo = {};
+		allocCreateInfo.usage = VMA_MEMORY_USAGE_AUTO;
+		allocCreateInfo.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT |
+			VMA_ALLOCATION_CREATE_MAPPED_BIT;
+
+		VkBuffer buf;
+		VmaAllocation alloc;
+		VmaAllocationInfo allocInfo;
+		vmaCreateBuffer(m_vulkanMemoryAllocator, &bufCreateInfo, &allocCreateInfo, &buf, &alloc, &allocInfo);
+		memcpy(allocInfo.pMappedData, data->v_indices.data(), buffSize);
+
+
+		for (unsigned int i = 0; i < 1; i++)
 		{
-			m_indexBuffers.push_back({});
-			m_indexBuffersMemory.push_back({});
-			m_indexBuffersMapped.push_back({});
-			// stage vertex buffer in CPU accessible on the GPU
-			CreateBuffer(buffSize, usage, properties, m_indexBuffers[i].back(), m_indexBuffersMemory[i].back());
-			// map memory
-			vkMapMemory(m_device, m_indexBuffersMemory[i].back(), 0, buffSize, 0, &m_indexBuffersMapped[i].back());
-			memcpy(m_indexBuffersMapped[i].back(), data->v_indices.data(), (size_t)buffSize);
+			m_indexBuffers[i].push_back({});
+			m_indexAllocations[i].push_back({});
+
+			VkBufferCreateInfo bufferInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
+			bufferInfo.size = buffSize;
+			bufferInfo.usage = VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+
+			VmaAllocationCreateInfo allocInfo = {};
+			allocInfo.usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
+
+			VmaAllocationInfo info = {};
+
+			vmaCreateBuffer(m_vulkanMemoryAllocator, &bufferInfo, &allocInfo, &m_indexBuffers[i].back(), &m_indexAllocations[i].back(), &info);
+			CopyBuffer(buf, m_indexBuffers[i].back(), buffSize);
+
+			renderObj.pIndices = info.deviceMemory;
 		}
+
+		// destroy staging buffer
+		vmaDestroyBuffer(m_vulkanMemoryAllocator, buf, alloc);
 	}
 
-	void VulkanAPI::CreateUniformBuffers(uint32_t transforms)
+	void VulkanAPI::CreateCamera(uint32_t cameraCount)
+	{
+		glm::vec3 p = { 1, 0, 0 };
+		glm::vec3 at = { 1, 0, 1 };
+		glm::vec3 up = { 0, 1, 0 };
+		for (size_t i = 0; i < cameraCount; i++)
+		{
+			m_cameras.push_back(Camera(p, up, at));
+		}
+		m_currentCamera = 0;
+	}
+
+	void VulkanAPI::UpdateCamera(Transform* transform)
+	{
+		m_cameras.at(m_currentCamera).CalculateModelViewProjection(transform);
+	}
+
+	// difficult case of needing dynamic memory
+	// 1st try to pick memory that is both device local and host visible, else
+	// it will pick device local memory and a separate stage buffer must be present at all times
+	// https://gpuopen-librariesandsdks.github.io/VulkanMemoryAllocator/html/usage_patterns.html#usage_patterns_gpu_only
+	void VulkanAPI::CreateUniformBuffers(Renderable& renderObj, uint32_t transforms)
 	{
 		// transform
-		VkDeviceSize size = sizeof(glm::mat4);
+		VkDeviceSize buffSize = transforms*sizeof(glm::mat4);
 
-		m_uniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
-		m_uniformBuffersMemory.resize(MAX_FRAMES_IN_FLIGHT);
-		m_uniformBuffersMapped.resize(MAX_FRAMES_IN_FLIGHT);
+		renderObj.transformsCapacity = transforms;
+		renderObj.transformsCount = 1;
+
+#ifdef NAIVE_UNIFORM_ALLOCATION
 
 		for (unsigned int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
 		{
 			m_uniformBuffers[i].push_back({});
-			m_uniformBuffersMemory[i].push_back({});
-			m_uniformBuffersMapped[i].push_back({});
+			m_uniformAllocations[i].push_back({});
+			m_uniformBufferMapped[i].push_back({});
 
-			CreateBuffer(size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, m_uniformBuffers[i].back(), m_uniformBuffersMemory[i].back());
-			vkMapMemory(m_device, m_uniformBuffersMemory[i].back(), 0, size, 0, &m_uniformBuffersMapped[i].back());
+			VkBufferCreateInfo bufferInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
+			bufferInfo.size = buffSize;
+			bufferInfo.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+
+			VmaAllocationCreateInfo allocInfo = {};
+			allocInfo.usage = VMA_MEMORY_USAGE_AUTO;
+			allocInfo.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT;
+
+			VmaAllocationInfo info = {};
+
+			vmaCreateBuffer(m_vulkanMemoryAllocator, &bufferInfo, &allocInfo, &m_uniformBuffers[i].back(), &m_uniformAllocations[i].back(), &info);
+			
+			// map allocation to be directly accessible
+			vmaMapMemory(m_vulkanMemoryAllocator, m_uniformAllocations[i].back(), (void**)&(m_uniformBufferMapped[i].back()));
+
+			renderObj.transforms[i] = m_uniformBufferMapped[i].back();
 		}
+#else
+
+		// TODO this
+		/*
+		// try to place in host-visible and device-visible, else create two separate buffers
+		VkBufferCreateInfo bufCreateInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
+		bufCreateInfo.size = 65536;
+		bufCreateInfo.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+
+		VmaAllocationCreateInfo allocCreateInfo = {};
+		allocCreateInfo.usage = VMA_MEMORY_USAGE_AUTO;
+		allocCreateInfo.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT |
+			VMA_ALLOCATION_CREATE_HOST_ACCESS_ALLOW_TRANSFER_INSTEAD_BIT |
+			VMA_ALLOCATION_CREATE_MAPPED_BIT;
+
+		VkBuffer buf;
+		VmaAllocation alloc;
+		VmaAllocationInfo allocInfo;
+		VkResult result = vmaCreateBuffer(allocator, &bufCreateInfo, &allocCreateInfo, &buf, &alloc, &allocInfo);
+		// Check result...
+
+		VkMemoryPropertyFlags memPropFlags;
+		vmaGetAllocationMemoryProperties(allocator, alloc, &memPropFlags);
+
+		if (memPropFlags & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT)
+		{
+			// Allocation ended up in a mappable memory and is already mapped - write to it directly.
+
+			// [Executed in runtime]:
+			memcpy(allocInfo.pMappedData, myData, myDataSize);
+			result = vmaFlushAllocation(allocator, alloc, 0, VK_WHOLE_SIZE);
+			// Check result...
+
+			VkBufferMemoryBarrier bufMemBarrier = { VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER };
+			bufMemBarrier.srcAccessMask = VK_ACCESS_HOST_WRITE_BIT;
+			bufMemBarrier.dstAccessMask = VK_ACCESS_UNIFORM_READ_BIT;
+			bufMemBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+			bufMemBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+			bufMemBarrier.buffer = buf;
+			bufMemBarrier.offset = 0;
+			bufMemBarrier.size = VK_WHOLE_SIZE;
+
+			vkCmdPipelineBarrier(cmdBuf, VK_PIPELINE_STAGE_HOST_BIT, VK_PIPELINE_STAGE_VERTEX_SHADER_BIT,
+				0, 0, nullptr, 1, &bufMemBarrier, 0, nullptr);
+		}
+		else
+		{
+			// Allocation ended up in a non-mappable memory - a transfer using a staging buffer is required.
+			VkBufferCreateInfo stagingBufCreateInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
+			stagingBufCreateInfo.size = 65536;
+			stagingBufCreateInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+
+			VmaAllocationCreateInfo stagingAllocCreateInfo = {};
+			stagingAllocCreateInfo.usage = VMA_MEMORY_USAGE_AUTO;
+			stagingAllocCreateInfo.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT |
+				VMA_ALLOCATION_CREATE_MAPPED_BIT;
+
+			VkBuffer stagingBuf;
+			VmaAllocation stagingAlloc;
+			VmaAllocationInfo stagingAllocInfo;
+			result = vmaCreateBuffer(allocator, &stagingBufCreateInfo, &stagingAllocCreateInfo,
+				&stagingBuf, &stagingAlloc, &stagingAllocInfo);
+			// Check result...
+
+			// [Executed in runtime]:
+			memcpy(stagingAllocInfo.pMappedData, myData, myDataSize);
+			result = vmaFlushAllocation(allocator, stagingAlloc, 0, VK_WHOLE_SIZE);
+			// Check result...
+
+			VkBufferMemoryBarrier bufMemBarrier = { VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER };
+			bufMemBarrier.srcAccessMask = VK_ACCESS_HOST_WRITE_BIT;
+			bufMemBarrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+			bufMemBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+			bufMemBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+			bufMemBarrier.buffer = stagingBuf;
+			bufMemBarrier.offset = 0;
+			bufMemBarrier.size = VK_WHOLE_SIZE;
+
+			vkCmdPipelineBarrier(cmdBuf, VK_PIPELINE_STAGE_HOST_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
+				0, 0, nullptr, 1, &bufMemBarrier, 0, nullptr);
+
+			VkBufferCopy bufCopy = {
+				0, // srcOffset
+				0, // dstOffset,
+				myDataSize, // size
+			};
+
+			vkCmdCopyBuffer(cmdBuf, stagingBuf, buf, 1, &bufCopy);
+
+			VkBufferMemoryBarrier bufMemBarrier2 = { VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER };
+			bufMemBarrier2.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+			bufMemBarrier2.dstAccessMask = VK_ACCESS_UNIFORM_READ_BIT; // We created a uniform buffer
+			bufMemBarrier2.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+			bufMemBarrier2.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+			bufMemBarrier2.buffer = buf;
+			bufMemBarrier2.offset = 0;
+			bufMemBarrier2.size = VK_WHOLE_SIZE;
+
+			vkCmdPipelineBarrier(cmdBuf, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_VERTEX_SHADER_BIT,
+				0, 0, nullptr, 1, &bufMemBarrier2, 0, nullptr);
+		}
+		*/
+#endif /* NAIVE_UNIFORM_ALLOCATION */
+	}
+
+	// allocate memory for descriptor sets
+	void VulkanAPI::CreateDescriptorPool()
+	{
+		std::array<VkDescriptorPoolSize, 1> poolSizes{};
+		// projection-model-view matrix 
+		poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		poolSizes[0].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+		// poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		// poolSizes[1].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+
+		VkDescriptorPoolCreateInfo poolInfo{};
+		poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+		poolInfo.pPoolSizes = poolSizes.data();
+		poolInfo.poolSizeCount = (uint32_t)poolSizes.size();
+		poolInfo.maxSets = (uint32_t)MAX_FRAMES_IN_FLIGHT;
+
+		QN_CORE_ASSERT(vkCreateDescriptorPool(m_device, &poolInfo, nullptr, &m_descriptorPool) == VK_SUCCESS, "Failed to create Descriptor Pool!");
+	}
+
+	void VulkanAPI::CreateDescriptorSet(uint32_t idx)
+	{
+		std::vector<VkDescriptorSetLayout> layouts(MAX_FRAMES_IN_FLIGHT, m_descriptorSetLayout);
+		VkDescriptorSetAllocateInfo allocateDescriptor{};
+		allocateDescriptor.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+		allocateDescriptor.descriptorSetCount = MAX_FRAMES_IN_FLIGHT;
+		allocateDescriptor.pSetLayouts = layouts.data();
+		allocateDescriptor.descriptorPool = m_descriptorPool;
+
+		if (m_descriptorSets.size() < (size_t)idx+1)
+		{
+			m_descriptorSets.resize((size_t)idx + 1);
+		}
+		m_descriptorSets[idx].resize(MAX_FRAMES_IN_FLIGHT);
+		// for (unsigned int j = 0; j < 1 /*m_uniformBuffers.size()*/; j++)
+		// {
+		QN_CORE_ASSERT(vkAllocateDescriptorSets(m_device, &allocateDescriptor, m_descriptorSets[idx].data()) == VK_SUCCESS, "Failed to Allocate Descriptor Sets!");
+			for (unsigned int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+			{
+				
+				VkDescriptorBufferInfo buffInfo{};
+				buffInfo.buffer = m_uniformBuffers[i][idx];
+				buffInfo.offset = 0;
+				buffInfo.range = sizeof(glm::mat4);
+
+				VkDescriptorImageInfo imageInfo{};
+				imageInfo.imageView = m_textureImageView;
+				imageInfo.sampler = m_textureSampler;
+				imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+				std::array<VkWriteDescriptorSet, 1> descriptorWrites{};
+				// buff info
+				descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+				descriptorWrites[0].dstSet = m_descriptorSets[idx][i];
+				descriptorWrites[0].dstBinding = 0;
+				descriptorWrites[0].dstArrayElement = 0; // indexing into descriptor set index
+				descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+				descriptorWrites[0].descriptorCount = 1;
+				descriptorWrites[0].pBufferInfo = &buffInfo;
+
+				// imageInfo
+				// descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+				// [1].dstSet = m_descriptorSets[i];
+				// descriptorWrites[1].dstBinding = 1;
+				// descriptorWrites[1].dstArrayElement = 0; // indexing into descriptor set index
+				// descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+				// descriptorWrites[1].descriptorCount = 1; // one texture view
+				// descriptorWrites[1].pImageInfo = &imageInfo;
+
+				vkUpdateDescriptorSets(m_device, (uint32_t)descriptorWrites.size(), descriptorWrites.data(), 0, nullptr);
+			}
+		// }
 	}
 
 	void VulkanAPI::CreateCommandPool()
@@ -1221,6 +1528,164 @@ namespace Quin
 		vkBindBufferMemory(m_device, buffer, bufferMemory, 0);
 	}
 
+	void VulkanAPI::CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
+	{
+		VkCommandBuffer commandBuffer = CreateSingleTimeCommandBuffer();
+
+		// create buffer copy region and copy buffer
+		VkBufferCopy bufCopy{};
+		bufCopy.size = size;
+		bufCopy.srcOffset = 0;
+		bufCopy.dstOffset = 0;
+		vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &bufCopy);
+
+		EndSingleTimeCommandBuffer(commandBuffer);
+	}
+
+	// typeFilter is a bitfield of suitable memory types
+	uint32_t VulkanAPI::FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties)
+	{
+		// get physical device memory properties
+		VkPhysicalDeviceMemoryProperties memProperties;
+		vkGetPhysicalDeviceMemoryProperties(m_physicalDevice, &memProperties);
+
+		for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) {
+			// check if memory type is suitable and memory properties fullfil requirements per properties
+			if (typeFilter & (1 << i) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties) {
+				return i;
+			}
+		}
+
+		QN_CORE_ASSERT(false, "Failed to find suitable memory type!");
+	}
+
+	VkFormat VulkanAPI::findDepthFormat() {
+		return findSupportedFormat(
+			{ VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT },
+			VK_IMAGE_TILING_OPTIMAL,
+			VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT
+		);
+	}
+
+	VkFormat VulkanAPI::findSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features)
+	{
+		for (VkFormat format : candidates) 
+		{
+			VkFormatProperties props;
+			vkGetPhysicalDeviceFormatProperties(m_physicalDevice, format, &props);
+		
+			if (tiling == VK_IMAGE_TILING_LINEAR && (props.linearTilingFeatures & features) == features) 
+			{
+				return format;
+			}
+			else if (tiling == VK_IMAGE_TILING_OPTIMAL && (props.optimalTilingFeatures & features) == features) 
+			{
+				return format;
+			}
+		}
+		QN_CORE_ASSERT(false, "failed to find supported format!");
+	}
+
+	bool VulkanAPI::hasStencilComponent(VkFormat format)
+	{
+		return format == VK_FORMAT_D32_SFLOAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT;
+	}
+
+	void VulkanAPI::CreateDepthResource()
+	{
+		VkFormat depthFormat = findDepthFormat();
+
+		CreateImage(swapChainExtent.width, swapChainExtent.height, depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_depthImage, m_depthImageMemory);
+		m_depthImageView = CreateImageView(m_depthImage, depthFormat, VK_IMAGE_VIEW_TYPE_2D, 1, VK_IMAGE_ASPECT_DEPTH_BIT);
+
+
+
+	}
+
+	void VulkanAPI::CreateImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags memoryProperties, VkImage& image, VkDeviceMemory& imageMemory)
+	{
+		// create 
+		VkImageCreateInfo imageInfo{};
+		imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+		imageInfo.imageType = VK_IMAGE_TYPE_2D; // 2D texture
+		imageInfo.extent.width = width; // x-axis
+		imageInfo.extent.height = height; // y-axis
+		imageInfo.extent.depth = 1; // z-axis
+		imageInfo.mipLevels = 1; // don't use mipmpapping for now
+		imageInfo.arrayLayers = 1;
+		imageInfo.format = format;
+		imageInfo.tiling = tiling; // more optimal than linear (obviously)
+		imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED; // discard texels after transfer operation
+		imageInfo.usage = usage; // sampled means to use data in the shader
+		imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE; // only use one queue family (graphics family)
+		imageInfo.samples = VK_SAMPLE_COUNT_1_BIT; // no multisampling yet
+		imageInfo.flags = 0; // Optional
+
+		QN_CORE_ASSERT(vkCreateImage(m_device, &imageInfo, nullptr, &image) == VK_SUCCESS, "Failed to create image!");
+
+		VkMemoryRequirements memoryRequirements{};
+		vkGetImageMemoryRequirements(m_device, image, &memoryRequirements);
+
+		VkMemoryAllocateInfo allocInfo{};
+		allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+		allocInfo.allocationSize = memoryRequirements.size;
+		allocInfo.memoryTypeIndex = FindMemoryType(memoryRequirements.memoryTypeBits, memoryProperties);
+
+		// alloc memory
+		QN_CORE_ASSERT(vkAllocateMemory(m_device, &allocInfo, nullptr, &imageMemory) == VK_SUCCESS, "Failed to allocate memory for texture!");
+		// bind texture to memory
+		vkBindImageMemory(m_device, image, imageMemory, 0);
+	}
+
+	void VulkanAPI::CreateImageViews()
+	{
+		m_swapChainImageViews.resize(m_swapChainImages.size());
+
+		QN_CORE_INFO("swap chain size: {0}", m_swapChainImages.size());
+
+		// create image view for all images
+		for (unsigned int i = 0; i < m_swapChainImageViews.size(); i++)
+		{
+			QN_CORE_INFO("Create Image View: line {0}", __LINE__);
+			m_swapChainImageViews[i] = CreateImageView(m_swapChainImages[i], swapChainImageFormat, VK_IMAGE_VIEW_TYPE_2D, 1, VK_IMAGE_ASPECT_COLOR_BIT);
+		}
+	}
+
+	VkImageView VulkanAPI::CreateImageView(VkImage image, VkFormat format, VkImageViewType viewType, uint32_t layerCount, VkImageAspectFlags aspectFlags)
+	{
+		VkImageViewCreateInfo createInfo{};
+		createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+		createInfo.image = image;
+		// treat images as 1D textures, 2D textures, 3D textures and cube maps
+		createInfo.viewType = viewType;
+		createInfo.format = format;
+		// can swizzle color channels around, leave as default
+		createInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+		createInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+		createInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+		createInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+
+		createInfo.subresourceRange.aspectMask = aspectFlags;
+		createInfo.subresourceRange.baseMipLevel = 0; // no mipmapping for now
+		createInfo.subresourceRange.levelCount = 1;
+
+		// ----- FOR VR SUPPORT -----
+		// If you were working on a stereographic 3D application, 
+		// then you would create a swap chain with multiple layers. 
+		// You could then create multiple image views for each image 
+		// representing the views for the left and right eyes by 
+		// accessing different layers.
+		createInfo.subresourceRange.baseArrayLayer = 0;
+		QN_CORE_TRACE("layer count: {0}", layerCount);
+		createInfo.subresourceRange.layerCount = layerCount;
+
+		VkImageView imageView;
+		QN_CORE_ASSERT(vkCreateImageView(m_device, &createInfo, nullptr, &imageView) == VK_SUCCESS, "Could not create Swap Chain Image View!");
+
+		// return copy of image view
+		return imageView;
+	}
+
 	// later when we want to modularize multiple scenes
 	// in one project we'll want to give the ability to
 	// clear buffers without destroying vulkan itself
@@ -1238,8 +1703,8 @@ namespace Quin
 		for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
 			for (size_t j = 0; j < m_uniformBuffers.size(); j++)
 			{
-				vkDestroyBuffer(m_device, m_uniformBuffers[i][j], nullptr);
-				vkFreeMemory(m_device, m_uniformBuffersMemory[i][j], nullptr);
+				vmaUnmapMemory(m_vulkanMemoryAllocator, m_uniformAllocations[i][j]);
+				vmaDestroyBuffer(m_vulkanMemoryAllocator, m_uniformBuffers[i][j], m_uniformAllocations[i][j]);
 			}
 		}
 		// automatically destroys descriptor sets
@@ -1247,11 +1712,14 @@ namespace Quin
 
 		// destroy and free index buffer and vertex buffer
 		for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-			vkDestroyBuffer(m_device, m_vertexBuffers[i], nullptr);
-			vkFreeMemory(m_device, m_vertexBuffersMemory[i], nullptr);
-
-			vkDestroyBuffer(m_device, m_indexBuffers[i], nullptr);
-			vkFreeMemory(m_device, m_indexBuffersMemory[i], nullptr);
+			for (size_t j = 0; j < m_vertexBuffers[i].size(); j++)
+			{
+				vmaDestroyBuffer(m_vulkanMemoryAllocator, m_vertexBuffers[i][j], m_vertexAllocations[i][j]);
+			}
+			for (size_t j = 0; j < m_indexBuffers[i].size(); j++)
+			{
+				vmaDestroyBuffer(m_vulkanMemoryAllocator, m_indexBuffers[i][j], m_indexAllocations[i][j]);
+			}
 		}
 
 		QN_CORE_INFO("Destroying Vulkan!");
@@ -1271,6 +1739,9 @@ namespace Quin
 		// TODO destroy 2D and shadow pipeline
 		vkDestroyPipelineLayout(m_device, m_pipelineLayout, nullptr);
 		vkDestroyRenderPass(m_device, m_renderPass, nullptr);
+
+		// free VMA
+		vmaDestroyAllocator(m_vulkanMemoryAllocator);
 
 
 		vkDestroyDevice(m_device, nullptr);

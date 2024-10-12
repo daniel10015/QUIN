@@ -19,7 +19,7 @@ namespace Quin
 		return;
 	}
 
-	dataInfo ResourceManager::AllocateMesh(BUFFER_TYPE buf, RESOURCE_TYPE resource, std::string filename, uint32_t transform_size)
+	dataInfo* ResourceManager::AllocateMesh(BUFFER_TYPE buf, RESOURCE_TYPE resource, std::string filename, uint32_t transform_size)
 	{
 		return IRenderer::ResourceAllocate(buf, resource, filename, transform_size);
 	}

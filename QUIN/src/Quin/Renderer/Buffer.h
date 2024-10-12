@@ -1,115 +1,110 @@
 #pragma once
 #include <glm/glm.hpp>
 #include <vulkan/vulkan_core.h>
+#include "Camera.h"
 
-struct vertex3D
+namespace Quin
 {
-	glm::vec3 position;
-	glm::vec3 normal;
-	glm::vec2 texMapCoord;
-	glm::vec2 normMapCoord;
-	float textureMapSerial;
-	float normalMapSerial;
-
-	static VkVertexInputBindingDescription getBindingDescription()
+	struct vertex3D
 	{
-		VkVertexInputBindingDescription bindingDescription{};
+		glm::vec3 position;
+		glm::vec3 normal;
+		glm::vec2 texMapCoord;
+		glm::vec2 normMapCoord;
 
-		bindingDescription.binding = 0;
-		bindingDescription.stride = sizeof(vertex3D);
-		bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX; // was instanced 
+		static VkVertexInputBindingDescription getBindingDescription()
+		{
+			VkVertexInputBindingDescription bindingDescription{};
 
-		return bindingDescription;
-	}
+			bindingDescription.binding = 0;
+			bindingDescription.stride = sizeof(vertex3D);
+			bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX; //VK_VERTEX_INPUT_RATE_INSTANCE;
 
-	static std::array<VkVertexInputAttributeDescription, 6> getAttributeDescriptions()
+			return bindingDescription;
+		}
+
+		static std::array<VkVertexInputAttributeDescription, 4> getAttributeDescriptions()
+		{
+			std::array<VkVertexInputAttributeDescription, 4> attributeDescriptions{};
+			// vec3 position data format
+			attributeDescriptions[0].binding = 0;
+			attributeDescriptions[0].location = 0;
+			attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
+			attributeDescriptions[0].offset = offsetof(vertex3D, position);
+
+			// vec3 normal data format
+			attributeDescriptions[1].binding = 0;
+			attributeDescriptions[1].location = 1;
+			attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
+			attributeDescriptions[1].offset = offsetof(vertex3D, normal);
+
+			// vec2 texture coordinate format
+			attributeDescriptions[2].binding = 0;
+			attributeDescriptions[2].location = 2;
+			attributeDescriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
+			attributeDescriptions[2].offset = offsetof(vertex3D, texMapCoord);
+
+			// vec2 normal coordinate format
+			attributeDescriptions[3].binding = 0;
+			attributeDescriptions[3].location = 3;
+			attributeDescriptions[3].format = VK_FORMAT_R32G32_SFLOAT;
+			attributeDescriptions[3].offset = offsetof(vertex3D, normMapCoord);
+
+			return attributeDescriptions;
+		}
+	};
+
+	struct vertex2D
 	{
-		std::array<VkVertexInputAttributeDescription, 6> attributeDescriptions{};
-		// vec3 position data format
-		attributeDescriptions[0].binding = 0;
-		attributeDescriptions[0].location = 0;
-		attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
-		attributeDescriptions[0].offset = offsetof(vertex3D, position);
+		glm::vec2 position;
+		glm::vec4 color;
+		glm::vec2 texCoord;
+		float textureSerial;
 
-		// vec3 normal data format
-		attributeDescriptions[1].binding = 0;
-		attributeDescriptions[1].location = 0;
-		attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
-		attributeDescriptions[1].offset = offsetof(vertex3D, normal);
+		static VkVertexInputBindingDescription getBindingDescription()
+		{
+			VkVertexInputBindingDescription bindingDescription{};
 
-		// vec2 texture coordinate format
-		attributeDescriptions[2].binding = 0;
-		attributeDescriptions[2].location = 2;
-		attributeDescriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
-		attributeDescriptions[2].offset = offsetof(vertex3D, texMapCoord);
+			bindingDescription.binding = 0;
+			bindingDescription.stride = sizeof(vertex2D);
+			bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX; // was instanced 
 
-		// vec2 normal coordinate format
-		attributeDescriptions[3].binding = 0;
-		attributeDescriptions[3].location = 3;
-		attributeDescriptions[3].format = VK_FORMAT_R32G32_SFLOAT;
-		attributeDescriptions[3].offset = offsetof(vertex3D, normMapCoord);
+			return bindingDescription;
+		}
 
-		// float texture data format
-		attributeDescriptions[4].binding = 0;
-		attributeDescriptions[4].location = 2;
-		attributeDescriptions[4].format = VK_FORMAT_R32_SFLOAT;
-		attributeDescriptions[4].offset = offsetof(vertex3D, textureMapSerial);
+		static std::array<VkVertexInputAttributeDescription, 4> getAttributeDescriptions()
+		{
+			std::array<VkVertexInputAttributeDescription, 4> attributeDescriptions{};
+			// position data format
+			attributeDescriptions[0].binding = 0;
+			attributeDescriptions[0].location = 0;
+			attributeDescriptions[0].format = VK_FORMAT_R32G32_SFLOAT;
+			attributeDescriptions[0].offset = offsetof(vertex2D, position);
 
-		// float texture data format
-		attributeDescriptions[5].binding = 0;
-		attributeDescriptions[5].location = 3;
-		attributeDescriptions[5].format = VK_FORMAT_R32_SFLOAT;
-		attributeDescriptions[5].offset = offsetof(vertex3D, normalMa[Serial);
+			// color data format
+			attributeDescriptions[1].binding = 0;
+			attributeDescriptions[1].location = 1;
+			attributeDescriptions[1].format = VK_FORMAT_R32G32B32A32_SFLOAT;
+			attributeDescriptions[1].offset = offsetof(vertex2D, color);
 
-		return attributeDescriptions;
-	}
-};
+			// texture data format
+			attributeDescriptions[2].binding = 0;
+			attributeDescriptions[2].location = 2;
+			attributeDescriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
+			attributeDescriptions[2].offset = offsetof(vertex2D, texCoord);
 
-struct vertex2D
-{
-	glm::vec2 position;
-	glm::vec4 color;
-	glm::vec2 texCoord;
-	float textureSerial;
+			// texture data format
+			attributeDescriptions[3].binding = 0;
+			attributeDescriptions[3].location = 3;
+			attributeDescriptions[3].format = VK_FORMAT_R32_SFLOAT;
+			attributeDescriptions[3].offset = offsetof(vertex2D, textureSerial);
 
-	static VkVertexInputBindingDescription getBindingDescription() 
+			return attributeDescriptions;
+		}
+	};
+
+	struct RenderCamera
 	{
-		VkVertexInputBindingDescription bindingDescription{};
-
-		bindingDescription.binding = 0;
-		bindingDescription.stride = sizeof(vertex2D);
-		bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX; // was instanced 
-
-		return bindingDescription;
-	}
-
-	static std::array<VkVertexInputAttributeDescription, 4> getAttributeDescriptions() 
-	{
-		std::array<VkVertexInputAttributeDescription, 4> attributeDescriptions{};
-		// position data format
-		attributeDescriptions[0].binding = 0;
-		attributeDescriptions[0].location = 0;
-		attributeDescriptions[0].format = VK_FORMAT_R32G32_SFLOAT;
-		attributeDescriptions[0].offset = offsetof(vertex2D, position);
-
-		// color data format
-		attributeDescriptions[1].binding = 0;
-		attributeDescriptions[1].location = 1; 
-		attributeDescriptions[1].format = VK_FORMAT_R32G32B32A32_SFLOAT;
-		attributeDescriptions[1].offset = offsetof(vertex2D, color);
-
-		// texture data format
-		attributeDescriptions[2].binding = 0;
-		attributeDescriptions[2].location = 2;
-		attributeDescriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
-		attributeDescriptions[2].offset = offsetof(vertex2D, texCoord);
-
-		// texture data format
-		attributeDescriptions[3].binding = 0;
-		attributeDescriptions[3].location = 3;
-		attributeDescriptions[3].format = VK_FORMAT_R32_SFLOAT;
-		attributeDescriptions[3].offset = offsetof(vertex2D, textureSerial);
-
-		return attributeDescriptions;
-	}
-};
+		Camera camera;
+	};
+}

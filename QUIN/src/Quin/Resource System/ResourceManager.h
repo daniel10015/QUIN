@@ -16,7 +16,7 @@ namespace Quin
 		void FlushTransform(uint32_t meshID); // flushes for an individual mesh
 		void FlushTransformsForAll(); // will do this in parallel
 
-		dataInfo AllocateMesh(BUFFER_TYPE buf, RESOURCE_TYPE resource, std::string filename, uint32_t transform_size = 256);
+		dataInfo* AllocateMesh(BUFFER_TYPE buf, RESOURCE_TYPE resource, std::string filename, uint32_t transform_size = 256);
 	private:
 		std::vector<uint32_t> m_transformSize;
 		std::vector<void*> m_meshData;

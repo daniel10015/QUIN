@@ -7,26 +7,49 @@
 #include <optional>
 #include <string>
 
+#include "VkMem.h"
+#include "utils.h"
+
+#define MAX_FRAMES_IN_FLIGHT_MAC RENDER_BUFFER_SIZE
 
 namespace Quin
 {
-
-	// can perform 1 draw call (1 mesh for all transforms, must use same tex and mat)
-	struct renderable
-	{
-		void* mesh;
-		size_t meshSize;
-		std::array<glm::mat4*, 2> transforms; // buffer to pick from
-		size_t transformsCount; // instances to render
-		size_t transformsCapacity; // max possible transforms
-		uint32_t texIdx;
-		uint32_t matIdx;
-	};
-
 	struct VertexData
 	{
 		void* pData; // pointer to start of data
 		uint64_t size; // number of bytes
+	};
+
+	// data for the buffer and 
+	struct AllocatedBuffer
+	{
+		VkBuffer buf;
+		VmaAllocation allocation;
+	};
+
+	struct Mesh
+	{
+		AllocatedBuffer indices; 
+	};
+
+	// can perform 1 draw call (1 mesh for all transforms, must use same tex and mat)
+	struct Renderable
+	{
+		// data
+		VkDeviceMemory pVertices;
+		VkDeviceMemory pIndices;
+		std::array < glm::mat4*, MAX_FRAMES_IN_FLIGHT_MAC> transforms; // buffer to pick from
+
+		// sizes, capacities, IDs
+		uint32_t meshId;
+		uint32_t verticesSize;
+		size_t transformsCount; // instances to render
+		uint32_t indicesSize;
+		size_t transformsCapacity; // max possible transforms
+
+		// these will be useful later for indexing into textures and materials
+		uint32_t texIdx;
+		uint32_t matIdx;
 	};
 
 	struct QueueFamilyIndices {
@@ -46,18 +69,20 @@ namespace Quin
 	public:
 		static bool Initialize(void* windowInstance);
 		// should change these to mesh and also add a texture type for this (so it won't add transforms)
-		static dataInfo AllocateStaticMemory(RESOURCE_TYPE resourceType, std::string filename, uint32_t transform_size);
-		static dataInfo AllocateDynamicMemory(RESOURCE_TYPE resourceType, std::string filename, uint32_t transform_size);
+		static dataInfo* AllocateStaticMemory(RESOURCE_TYPE resourceType, std::string filename, uint32_t transform_size);
+		static dataInfo* AllocateDynamicMemory(RESOURCE_TYPE resourceType, std::string filename, uint32_t transform_size);
 		static void DrawFrame();
+		static void UpdateTransform(const glm::mat4& srcTransform, glm::mat4& dstTransform);
+		static void CreateCamera(uint32_t cameraCount);
+		static void UpdateCamera(Transform* transform);
 		// private functions
 	private:
-		// buffers
-		static inline std::vector<std::array<VertexData, 2>> m_dynamicBuffers;
-		static inline std::vector<std::array<VertexData, 2>> m_staticBuffers;
 		// render objects
-		static inline std::vector<renderable> m_renderabls;
-		static inline std::vector<std::array<void*, 2>> m_lights;
-		static inline std::array<void*, 2> m_camera = { nullptr, nullptr };
+		static inline std::vector<Renderable> m_renderables;
+
+		// camera and lights 
+		static inline std::vector<Camera> m_cameras;
+		static inline unsigned int m_currentCamera = 0;
 
 		// 2D batch renderer
 		static inline std::vector<vertex2D> m_VertexData2D;
@@ -107,13 +132,12 @@ namespace Quin
 		static inline std::vector<VkSemaphore> m_renderFinishedSemaphores;
 		static inline std::vector<VkFence> m_inFlightFences;
 		// vertex and index buffer Vkmemory handles
+		static inline VmaAllocator m_vulkanMemoryAllocator;
 		static inline std::vector<std::vector<VkBuffer>> m_vertexBuffers;
-		static inline std::vector<std::vector<VkDeviceMemory>> m_vertexBuffersMemory;
-		static inline std::vector<std::vector<void*>> m_vertexBuffersMapped;
+		static inline std::vector<std::vector<VmaAllocation>> m_vertexAllocations;
 		static inline size_t vCount = 0;
 		static inline std::vector<std::vector<VkBuffer>> m_indexBuffers;
-		static inline std::vector<std::vector<VkDeviceMemory>> m_indexBuffersMemory;
-		static inline std::vector<std::vector<void*>> m_indexBuffersMapped;
+		static inline std::vector<std::vector<VmaAllocation>> m_indexAllocations;
 		static inline size_t iCount = 0;
 		// texture handles and variables (these will become vectors later)
 		static inline VkImage m_textureImage;
@@ -127,12 +151,17 @@ namespace Quin
 		static inline VkDeviceSize m_textureImageSize;
 		// have as many uniform buffers as we have frames in flight
 		static inline std::vector<std::vector<VkBuffer>> m_uniformBuffers;
-		static inline std::vector<std::vector<VkDeviceMemory>> m_uniformBuffersMemory;
-		static inline std::vector<std::vector<void*>> m_uniformBuffersMapped;
+		static inline std::vector<std::vector<VmaAllocation>> m_uniformAllocations;
+		static inline std::vector<std::vector<glm::mat4*>> m_uniformBufferMapped;
 		static inline bool m_uniformDataSent = false;
 
+		// depth bufs
+		static inline VkImage m_depthImage;
+		static inline VkDeviceMemory m_depthImageMemory;
+		static inline VkImageView m_depthImageView;
+
 		static inline VkDescriptorPool m_descriptorPool;
-		static inline std::vector<VkDescriptorSet> m_descriptorSets; // hold descriptor sets for every frame in flight
+		static inline std::vector<std::vector<VkDescriptorSet>> m_descriptorSets; // hold descriptor sets for every frame in flight
 
 		static inline bool m_framebufferResized = false; // sometimes drivers won't trigger VK_ERROR_OUT_OF_DATE_KHR for swapchain recreation
 		static inline const std::vector<const char*> m_validationLayers = {
@@ -177,7 +206,8 @@ namespace Quin
 		static VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
 		static void CreateSwapChain();
 		static void CreateImageViews();
-		static VkImageView CreateImageView(VkImage image, VkFormat format, VkImageViewType viewType, uint32_t layerCount);
+		static VkImageView CreateImageView(VkImage image, VkFormat format, VkImageViewType viewType, uint32_t layerCount, VkImageAspectFlags aspectFlags);
+		static void CreateVMAObject();
 		// rendering pipeline
 	private: // temporary, going to change soon!
 		static void CreateDescriptorSetLayout();
@@ -189,12 +219,12 @@ namespace Quin
 		static VkPipelineColorBlendAttachmentState EnableAlphaBlending();
 		// frame/vertex buffers
 		static void CreateFrameBuffers();
-		static void CreateVertexBuffer(ObjData* data, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties);
-		static void CreateIndexBuffer(ObjData* data, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties);
+		static void CreateVertexBuffer(Renderable& renderObj, ObjData* data, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties);
+		static void CreateIndexBuffer(Renderable& renderObj, ObjData* data, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties);
 		// functions for uniform buffers
-		static void CreateUniformBuffers(uint32_t transforms);
+		static void CreateUniformBuffers(Renderable& renderObj, uint32_t transforms);
 		static void CreateDescriptorPool();
-		static void CreateDescriptorSets();
+		static void CreateDescriptorSet(uint32_t idx);
 		// command buffer functions
 		static void CreateCommandPool();
 		static void CreateCommandBuffers();
@@ -209,11 +239,16 @@ namespace Quin
 		static void CreateImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
 		static void TransitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
 		static void CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height, const uint32_t layerCount);
+
+		static void CreateDepthResource();
+		static VkFormat findSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
+		static bool hasStencilComponent(VkFormat format);
 private:
 	static void RecreateSwapChain();
 	static void CleanupSwapChain();
 	// utilities
 	private:
+		static VkFormat findDepthFormat();
 		static uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 		static void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
 		static void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size); // copy src buf to dst buf

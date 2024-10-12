@@ -12,9 +12,9 @@ namespace Quin
 		float a_aspect)
 		: fovy(a_fov), nearPlane(a_nearPlane), farPlane(a_farPlane), aspect(a_aspect)
 	{
-		transform.position = a_position;
-		transform.up = a_up;
-		transform.at = a_at;
+		m_transform.position = a_position;
+		m_transform.up = a_up;
+		m_transform.at = a_at;
 
 		CalculateProjection();
 	}
@@ -29,9 +29,19 @@ namespace Quin
 		m_projectionMatrix = glm::perspective(fovy, aspect, nearPlane, farPlane);
 	}
 
-	void Camera::WriteModelViewProjection(glm::mat4* mvp) const
+	void Camera::UpdateTransform(const Transform& transform)
 	{
-		glm::mat4 modelView = glm::lookAt(transform.position, transform.at, transform.up);
-		*mvp = m_projectionMatrix * modelView;
+		memcpy(&m_transform, &transform, sizeof(Transform));
+	}
+
+	void Camera::CalculateModelViewProjection() 
+	{
+		m_projectionModelViewMatrix = m_projectionMatrix * glm::lookAt(m_transform.position, m_transform.at, m_transform.up);
+	}
+
+	void Camera::CalculateModelViewProjection(const Transform* transform)
+	{
+		memcpy(&m_transform, transform, sizeof(Transform));
+		m_projectionModelViewMatrix = m_projectionMatrix * glm::lookAt(m_transform.position, m_transform.at, m_transform.up);
 	}
 }

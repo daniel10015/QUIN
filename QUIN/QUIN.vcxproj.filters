@@ -116,6 +116,7 @@
       <Filter>Quin</Filter>
     </ClInclude>
     <ClInclude Include="src\Quin\Platform\Vulkan\utils.h" />
+    <ClInclude Include="src\Quin\Platform\Vulkan\VkMem.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Quin\Application.cpp">
@@ -164,6 +165,7 @@
       <Filter>Quin</Filter>
     </ClCompile>
     <ClCompile Include="src\Quin\Platform\Vulkan\utils.cpp" />
+    <ClCompile Include="src\Quin\Platform\Vulkan\VkMem.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="src\Quin\Renderer\Shaders\Shader.frag">

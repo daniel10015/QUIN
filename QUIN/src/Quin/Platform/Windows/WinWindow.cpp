@@ -40,14 +40,15 @@ namespace Quin
 
 		m_window = glfwCreateWindow(wp.width, wp.height, wp.windowName.c_str(), NULL, NULL);
 
-		int iconWidth, iconHeight, channels;
-		unsigned char* iconPixels = stbi_load("../Quin/Assets/Rn.png", &iconWidth, &iconHeight, &channels, 4);
+		// icon stuff
+		// int iconWidth, iconHeight, channels;
+		// unsigned char* iconPixels = stbi_load("../QUIN/Assets/Rn.png", &iconWidth, &iconHeight, &channels, 4);
 
-		GLFWimage iconData{};
-		iconData.height = iconHeight;
-		iconData.width = iconWidth;
-		iconData.pixels = iconPixels;
-		glfwSetWindowIcon(m_window, 1, &iconData);
+		// GLFWimage iconData{};
+		// iconData.height = iconHeight;
+		// iconData.width = iconWidth;
+		// iconData.pixels = iconPixels;
+		// glfwSetWindowIcon(m_window, 1, &iconData);
 
 		//glfwMakeContextCurrent(m_window);
 		glfwSetWindowUserPointer(m_window, &m_windowData); // glfwGetWindowUserPointer(m_Window) returns window data

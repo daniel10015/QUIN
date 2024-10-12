@@ -19,22 +19,28 @@ namespace Quin
 		Camera(glm::vec3 a_position,
 			glm::vec3 a_up,
 			glm::vec3 a_at,
-			float a_fovy = 1.0,
-			float a_nearPlane = 1.0,
-			float a_farPlane = 100.0,
-			float a_aspect = 1.0);
+			float a_fovy = 1.0472f,
+			float a_nearPlane = 01.0f,
+			float a_farPlane = 100.0f,
+			float a_aspect = 16/9.0f);
 
 		~Camera();
 		void CalculateProjection();
-		void WriteModelViewProjection(glm::mat4* mvp) const;
+		void UpdateTransform(const Transform& transform);
+		// per-frame calculation
+		void CalculateModelViewProjection();
+		void CalculateModelViewProjection(const Transform* transform);
+
 
 		// the mat4 will be on the GPU :)
-		Transform transform;
+		Transform m_transform;
 
-		float fovy = 1.0;
-		float nearPlane = 1.0;
+		float fovy = 60.0;
+		float nearPlane = 01.0;
 		float farPlane = 100.0;
-		float aspect = 1.0;
+		float aspect = 16 / 9.0f;
 		glm::mat4 m_projectionMatrix;
+
+		glm::mat4 m_projectionModelViewMatrix;
 	};
 }

@@ -2,13 +2,14 @@
 #ifndef RENDERER_H
 #define RENDERER_H
 
-#include <core.h>
+//#include <core.h>
 #include <vector>
 #include <queue>
 #include <memory>
 #include <string>
 #include "QuinMath.h"
 #include "RenderData.h"
+#include "Camera.h"
 
 namespace Quin
 {
@@ -26,8 +27,10 @@ namespace Quin
 		// NOTE: This should be the first thing that runs during runtime
 		static bool ChooseGraphicsAPI(GRAPHICS_API api);
 		// all meshes and sprites allocate 256 transforms (1.6kb)
-		static dataInfo ResourceAllocate(BUFFER_TYPE buf, RESOURCE_TYPE resource, std::string filename, uint32_t transform_space = 256);
-		
+		static dataInfo* ResourceAllocate(BUFFER_TYPE buf, RESOURCE_TYPE resource, std::string filename, uint32_t transform_space = 256);
+		static void CreateCamera(uint32_t cameraCount);
+		static void UpdateCamera(Transform* transform);
+		static void UpdateTransform(const glm::mat4& srcTransform, glm::mat4& dstTransform);
 		static void Render();
 		// to add more stuff here, probably a pointer to meta data that'll dictate the process of 
 		// setting up the graphics API

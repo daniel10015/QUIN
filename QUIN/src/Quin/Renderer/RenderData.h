@@ -4,6 +4,8 @@
 #define RENDER_DATA_H
 #include "QuinMath.h"
 
+#define RENDER_BUFFER_SIZE 3
+
 namespace Quin
 {
 	enum class BUFFER_TYPE
@@ -37,7 +39,7 @@ namespace Quin
 	// later we'll also want to return dynamic mesh for physics, for now just transform buffers and size of allocation
 	struct dataInfo
 	{
-		std::array<glm::mat4*, 2> transforms_buf = {nullptr, nullptr};
+		std::array<glm::mat4*, RENDER_BUFFER_SIZE> transforms_buf = {nullptr, nullptr};
 		uint32_t transformsSize;
 	};
 }

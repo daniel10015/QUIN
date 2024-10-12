@@ -19,7 +19,7 @@ namespace Quin
 		IRenderer::ChooseGraphicsAPI(GRAPHICS_API::VULKAN);
 		QN_CORE_INFO("Window ptr: {0}", m_window->GetWindow());
 		IRenderer::SetupRenderer(m_window->GetWindow());
-		IRenderer::ResourceAllocate(BUFFER_TYPE::STATIC, RESOURCE_TYPE::Mesh, "Assets/FinalBaseMesh.obj");
+		
 
 		m_running = true;
 		m_minimized = false;
@@ -77,7 +77,7 @@ namespace Quin
 				//QN_CORE_TRACE("Sync with logic...");
 				SyncLogic(bufs[bufIdx]);
 				// start rendering
-				//QN_CORE_TRACE("Rendering...");
+				QN_CORE_TRACE("Rendering...");
 				IRenderer::Render();
 				bufs[bufIdx].unlock();
 				bufIdx ^= 0x01;
