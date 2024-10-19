@@ -14,12 +14,16 @@ EditorLayer::~EditorLayer()
 void EditorLayer::OnAttach()
 {
 	// TODO
-	m_dat = std::unique_ptr<Quin::dataInfo>(Quin::IRenderer::ResourceAllocate(Quin::BUFFER_TYPE::STATIC, Quin::RESOURCE_TYPE::Mesh, "Assets/FinalBaseMesh.obj"));
 	Quin::IRenderer::CreateCamera(1);
-
-	m_camera.at = { 0, -10, -10 };
-	m_camera.up = { 0, 1, 0 };
-	m_camera.position = { 0, 10, 10 };
+	m_dat = std::unique_ptr<Quin::dataInfo>(Quin::IRenderer::ResourceAllocate(Quin::BUFFER_TYPE::STATIC, Quin::RESOURCE_TYPE::Mesh, "Assets/skyscraper.obj"));
+	float y = 10.0f;
+	float z = 20.0f;
+	m_camera.at = { 0, y, 0 };
+	m_camera.up = { 0.0f, -y, z };
+	m_camera.position = { 0, y, z };
+	//m_camera.at = { -2.5+0.5, 17, -2.5+0.5 };
+	//m_camera.up = { -2.5, 17-1, -2.5 };
+	//m_camera.position = { -4, 18, -4 };
 
 	m_timer.start();
 }

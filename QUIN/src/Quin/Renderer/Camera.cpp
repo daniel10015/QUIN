@@ -34,14 +34,14 @@ namespace Quin
 		memcpy(&m_transform, &transform, sizeof(Transform));
 	}
 
-	void Camera::CalculateModelViewProjection() 
+	void Camera::CalculateViewProjection()
 	{
-		m_projectionModelViewMatrix = m_projectionMatrix * glm::lookAt(m_transform.position, m_transform.at, m_transform.up);
+		m_viewProjectionMatrix = m_projectionMatrix * glm::lookAt(m_transform.position, m_transform.at, m_transform.up);
 	}
 
-	void Camera::CalculateModelViewProjection(const Transform* transform)
+	void Camera::CalculateViewProjection(const Transform* transform)
 	{
 		memcpy(&m_transform, transform, sizeof(Transform));
-		m_projectionModelViewMatrix = m_projectionMatrix * glm::lookAt(m_transform.position, m_transform.at, m_transform.up);
+		m_viewProjectionMatrix = m_projectionMatrix * glm::lookAt(m_transform.position, m_transform.at, m_transform.up);
 	}
 }

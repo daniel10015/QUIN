@@ -152,7 +152,11 @@ namespace Quin
 		// have as many uniform buffers as we have frames in flight
 		static inline std::vector<std::vector<VkBuffer>> m_uniformBuffers;
 		static inline std::vector<std::vector<VmaAllocation>> m_uniformAllocations;
-		static inline std::vector<std::vector<glm::mat4*>> m_uniformBufferMapped;
+		static inline std::vector<std::vector<glm::mat4*>> m_uniformBufferMapped; 
+
+		static inline std::vector<VkBuffer> m_uniformCameraBuffers;
+		static inline std::vector<VmaAllocation> m_uniformCameraAllocations;
+		static inline std::vector<glm::mat4*> m_uniformCameraBufferMapped; 
 		static inline bool m_uniformDataSent = false;
 
 		// depth bufs

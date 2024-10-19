@@ -3,6 +3,7 @@
 #include <sstream>
 
 #include <filesystem>
+//#define TRIANGLE_STRIP
 #define PRINT_SYSTEM_PATH std::cout<<"Current working directory: "<<std::filesystem::current_path()<<std::endl
 
 namespace Quin
@@ -56,7 +57,12 @@ namespace Quin
 
 		QN_CORE_ASSERT(this->is_open(), "Failed to open binary file");
 
+		// pre-allocate 1024
 		buffer = new ObjData;
+		buffer->normals.reserve(1024); // reserves actual normal data
+		buffer->vertices.reserve(1024); // reserves actual vertex data
+		buffer->n_indices.reserve(1024); // reserve indices into normal data
+		buffer->v_indices.reserve(1024); // reserve indices into vertex data
 
 		// ----------
 		// parse data
@@ -155,7 +161,7 @@ namespace Quin
 		idx = skipWhitepace(input, idx);
 		// expect to consume 3 floats
 		uint8_t vCount = 0;
-		vertices.push_back({});
+		vertices.emplace_back();
 		std::pair<size_t, float> pRet = {};
 		while (vCount < 3)
 		{
@@ -176,7 +182,7 @@ namespace Quin
 		idx = skipWhitepace(input, idx);
 		// expect to consume 3 floats
 		uint8_t vCount = 0;
-		normals.push_back({});
+		normals.emplace_back();
 		std::pair<size_t, float> pRet = {};
 		while (vCount < 3)
 		{
@@ -212,37 +218,52 @@ namespace Quin
 		idx = skipWhitepace(input, idx);
 		std::vector<unsigned int> indicesRec;
 		std::vector<unsigned int> normalsRec;
+#ifdef TRIANGLE_STRIP
+		indicesRec.emplace_back(firstIndex);
+		normalsRec.emplace_back(firstNormal);
+#endif /* TRIANGLE_STRIP */
 		while (input[idx] != '\n')
 		{
 			pRet = parse_number(input, idx, face_delim);
 			idx = pRet.first;
-			indicesRec.push_back(pRet.second);
+			indicesRec.emplace_back(pRet.second);
 
 			pRet = parse_number(input, idx, whitespace);
 			idx = pRet.first;
-			normalsRec.push_back(pRet.second);
+			normalsRec.emplace_back(pRet.second);
 
 			idx = skipWhitepace(input, idx);
 		}
 
-		// create triangulation fan
+#ifdef TRIANGLE_STRIP
+		// triangle strip
+		for (size_t i = 0; i < indicesRec.size() - 2; i++)
+		{
+			// push first index and pair of indices
+			v_indices.emplace_back(indicesRec.at(i) - 1);
+			v_indices.emplace_back(indicesRec.at(i + 1) -1);
+			v_indices.emplace_back(indicesRec.at(i + 2) -1);
+
+			// push first normal and pair of normals
+			n_indices.emplace_back(normalsRec.at(i) - 1);
+			n_indices.emplace_back(normalsRec.at(i + 1) - 1);
+			n_indices.emplace_back(normalsRec.at(i + 2) - 1);
+		}
+#else
+		// triangle fan
 		for (size_t i = 0; i < indicesRec.size() - 1; i++)
 		{
 			// push first index and pair of indices
-			v_indices.push_back(firstIndex-1);
-			v_indices.push_back(indicesRec.at(i)-1);
-			v_indices.push_back(indicesRec.at(i + 1)-1);
+			v_indices.emplace_back(firstIndex-1);
+			v_indices.emplace_back(indicesRec.at(i)-1);
+			v_indices.emplace_back(indicesRec.at(i + 1)-1);
 
 			// push first normal and pair of normals
-			n_indices.push_back(firstNormal-1);
-			n_indices.push_back(normalsRec.at(i)-1);
-			n_indices.push_back(normalsRec.at(i + 1)-1);
-			// if (firstNormal > 0x1500)
-			// {
-			// 	QN_CORE_TRACE("normIdx: {0}", firstNormal);
-			// }
-			QN_ASSERT(firstNormal < 30000 && normalsRec.at(i) < 30000 && normalsRec.at(i+1) < 30000, "bad parse");
+			n_indices.emplace_back(firstNormal-1);
+			n_indices.emplace_back(normalsRec.at(i)-1);
+			n_indices.emplace_back(normalsRec.at(i + 1)-1);
 		}
+#endif /* TRIANGLE_STRIP */ 
 
 		return idx;
 	}

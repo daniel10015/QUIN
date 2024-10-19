@@ -173,7 +173,7 @@ namespace Quin
 
 		QN_CORE_ASSERT(vkQueueSubmit(m_graphicsQueue, 1, &submitInfo, m_inFlightFences[currentFrame]) == VK_SUCCESS, "Failed to Submit Info Queue!");
 
-		//TransitionImageLayout(m_swapChainImages[imageIndex], VK_FORMAT_B8G8R8A8_SRGB, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+		// TransitionImageLayout(m_swapChainImages[imageIndex], VK_FORMAT_B8G8R8A8_SRGB, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
 
 
 		VkPresentInfoKHR presentInfo{};
@@ -195,8 +195,8 @@ namespace Quin
 
 	void VulkanAPI::UpdateTransform(const glm::mat4& srcTransform, glm::mat4& dstTransform)
 	{
-		dstTransform = m_cameras.at(m_currentCamera).m_projectionModelViewMatrix * srcTransform;
-		QN_CORE_INFO("updated transform: {0}", dstTransform[1][1]);
+		dstTransform = srcTransform;
+		// ("updated transform: {0}", dstTransform[1][1]);
 	}
 
 	// command buffers
@@ -261,6 +261,9 @@ namespace Quin
 		// bind graphics pipeline
 		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphics3DPipeline);
 
+		// temp
+		//vkCmdSetCullMode(commandBuffer, VK_CULL_MODE_BACK_BIT);
+
 		// bind vertex buffer 
 		VkBuffer vertexBuffers[] = { m_vertexBuffers[0][0]};
 		VkDeviceSize offsets[] = { 0 }; // need to create vars to store offset data for arbitrary vBuf
@@ -292,10 +295,9 @@ namespace Quin
 
 
 		// draw call
-		//vkCmdDraw(commandBuffer, 3, 1, 0, 0);
+		// m_renderables[0].indicesSize
 		vkCmdDrawIndexed(commandBuffer, m_renderables[0].indicesSize, 1, 0, 0, 0);
-		QN_CORE_TRACE("indices: {0}", m_renderables[0].indicesSize);
-		//QN_CORE_TRACE("indicies drawn: {0}", iCount);
+		//QN_CORE_TRACE("indices: {0}", m_renderables[0].indicesSize);
 
 		// end render pass (no more draw calls with this render pass)
 		vkCmdEndRenderPass(commandBuffer);
@@ -491,15 +493,22 @@ namespace Quin
 		uboLayoutBinding.pImmutableSamplers = nullptr; // Optional, only relevant for image sampling descriptors
 		uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT; // use uniform in vertex shader 
 
-		// texture sampler layout binding
-		VkDescriptorSetLayoutBinding samplerLayoutBinding{};
-		samplerLayoutBinding.descriptorCount = 1; // one texture view
-		samplerLayoutBinding.binding = 1;
-		samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-		samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-		samplerLayoutBinding.pImmutableSamplers = nullptr;
+		VkDescriptorSetLayoutBinding uboCamLayoutBinding{};
+		uboCamLayoutBinding.binding = 1;
+		uboCamLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		uboCamLayoutBinding.descriptorCount = 1; // just 1 for now
+		uboCamLayoutBinding.pImmutableSamplers = nullptr; // Optional, only relevant for image sampling descriptors
+		uboCamLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT; // use uniform in vertex shader 
 
-		std::array<VkDescriptorSetLayoutBinding, 2> bindings = { uboLayoutBinding, samplerLayoutBinding };
+		// texture sampler layout binding
+		// VkDescriptorSetLayoutBinding samplerLayoutBinding{};
+		// samplerLayoutBinding.descriptorCount = 1; // one texture view
+		// samplerLayoutBinding.binding = 1;
+		// samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		// samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+		// samplerLayoutBinding.pImmutableSamplers = nullptr;
+
+		std::array<VkDescriptorSetLayoutBinding, 2> bindings = { uboLayoutBinding, uboCamLayoutBinding };
 
 		// array of bindings (array can be useful for indexing into bones in a mesh)
 		VkDescriptorSetLayoutCreateInfo layoutInfo{};
@@ -546,9 +555,9 @@ namespace Quin
 		VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
 		vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 		vertexInputInfo.vertexBindingDescriptionCount = 1;
-		vertexInputInfo.pVertexBindingDescriptions = &bindingDescription; // Optional
+		vertexInputInfo.pVertexBindingDescriptions = &bindingDescription; 
 		vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
-		vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data(); // Optional
+		vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data(); 
 
 		// input type
 		VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
@@ -808,14 +817,15 @@ namespace Quin
 	{
 		// combine vertices and normals
 		std::vector<vertex3D> dat; // holds the actual vertex data
-		for (size_t idx = 0; idx < data->n_indices.size(); idx++)
+		QN_CORE_ASSERT((data->normals.size() == 0 || data->vertices.size() == data->normals.size()), "invalid amount of normals");
+		for (size_t idx = 0; idx < data->vertices.size(); idx++)
 		{
 			dat.emplace_back();
-			dat.back().position = data->vertices[data->n_indices[idx]];
+			dat.back().position = data->vertices[idx];
 			// not all data has normals
-			if (idx < data->n_indices.size())
+			if (idx < data->normals.size())
 			{
-				dat.back().normal = data->normals[data->n_indices[idx]];
+				dat.back().normal = data->normals[idx];
 			}
 			// TODO handle cases of textures and normal maps
 		}
@@ -914,12 +924,46 @@ namespace Quin
 			renderObj.pIndices = info.deviceMemory;
 		}
 
+		// temp debug
+		QN_CORE_INFO("indices:");
+		for (int i = 0; i < 100*3; i+=3)
+		{
+			std::cout << "(" << data->v_indices.at(i) << "," << data->v_indices.at(i+1) << "," << data->v_indices.at(i+2) << std::endl;
+		}
+
 		// destroy staging buffer
 		vmaDestroyBuffer(m_vulkanMemoryAllocator, buf, alloc);
 	}
 
 	void VulkanAPI::CreateCamera(uint32_t cameraCount)
 	{
+		// allocate memory for camera
+		// transform
+		VkDeviceSize buffSize = cameraCount * sizeof(glm::mat4);
+
+		for (unsigned int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+		{
+			m_uniformCameraBuffers.push_back({});
+			m_uniformCameraAllocations.push_back({});
+			m_uniformCameraBufferMapped.push_back({});
+
+			VkBufferCreateInfo bufferInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
+			bufferInfo.size = buffSize;
+			bufferInfo.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+
+			VmaAllocationCreateInfo allocInfo = {};
+			allocInfo.usage = VMA_MEMORY_USAGE_AUTO;
+			allocInfo.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT;
+
+			VmaAllocationInfo info = {};
+
+			vmaCreateBuffer(m_vulkanMemoryAllocator, &bufferInfo, &allocInfo, &m_uniformCameraBuffers.back(), &m_uniformCameraAllocations.back(), &info);
+
+			// map allocation to be directly accessible
+			vmaMapMemory(m_vulkanMemoryAllocator, m_uniformCameraAllocations.back(), (void**)&(m_uniformCameraBufferMapped.back()));
+
+		}
+
 		glm::vec3 p = { 1, 0, 0 };
 		glm::vec3 at = { 1, 0, 1 };
 		glm::vec3 up = { 0, 1, 0 };
@@ -932,7 +976,8 @@ namespace Quin
 
 	void VulkanAPI::UpdateCamera(Transform* transform)
 	{
-		m_cameras.at(m_currentCamera).CalculateModelViewProjection(transform);
+		m_cameras.at(m_currentCamera).CalculateViewProjection(transform);
+		memcpy(m_uniformCameraBufferMapped[currentFrame] , &(m_cameras.at(m_currentCamera).m_viewProjectionMatrix), sizeof(glm::mat4));
 	}
 
 	// difficult case of needing dynamic memory
@@ -1080,10 +1125,12 @@ namespace Quin
 	// allocate memory for descriptor sets
 	void VulkanAPI::CreateDescriptorPool()
 	{
-		std::array<VkDescriptorPoolSize, 1> poolSizes{};
+		std::array<VkDescriptorPoolSize, 2> poolSizes{};
 		// projection-model-view matrix 
 		poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 		poolSizes[0].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+		poolSizes[1].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		poolSizes[1].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
 		// poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 		// poolSizes[1].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
 
@@ -1116,25 +1163,38 @@ namespace Quin
 			for (unsigned int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
 			{
 				
-				VkDescriptorBufferInfo buffInfo{};
-				buffInfo.buffer = m_uniformBuffers[i][idx];
-				buffInfo.offset = 0;
-				buffInfo.range = sizeof(glm::mat4);
+				VkDescriptorBufferInfo buffInfo_1{};
+				buffInfo_1.buffer = m_uniformBuffers[i][idx];
+				buffInfo_1.offset = 0;
+				buffInfo_1.range = sizeof(glm::mat4);
+
+				VkDescriptorBufferInfo buffInfo_2{};
+				buffInfo_2.buffer = m_uniformCameraBuffers.at(m_currentCamera);
+				buffInfo_2.offset = 0;
+				buffInfo_2.range = sizeof(glm::mat4);
 
 				VkDescriptorImageInfo imageInfo{};
 				imageInfo.imageView = m_textureImageView;
 				imageInfo.sampler = m_textureSampler;
 				imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
-				std::array<VkWriteDescriptorSet, 1> descriptorWrites{};
-				// buff info
+				std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
+				// transform info
 				descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 				descriptorWrites[0].dstSet = m_descriptorSets[idx][i];
 				descriptorWrites[0].dstBinding = 0;
 				descriptorWrites[0].dstArrayElement = 0; // indexing into descriptor set index
 				descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 				descriptorWrites[0].descriptorCount = 1;
-				descriptorWrites[0].pBufferInfo = &buffInfo;
+				descriptorWrites[0].pBufferInfo = &buffInfo_1;
+				// camera info
+				descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+				descriptorWrites[1].dstSet = m_descriptorSets[idx][i];
+				descriptorWrites[1].dstBinding = 1;
+				descriptorWrites[1].dstArrayElement = 0; // indexing into descriptor set index
+				descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+				descriptorWrites[1].descriptorCount = 1;
+				descriptorWrites[1].pBufferInfo = &buffInfo_2;
 
 				// imageInfo
 				// descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;

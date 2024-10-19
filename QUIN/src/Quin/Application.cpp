@@ -77,7 +77,7 @@ namespace Quin
 				//QN_CORE_TRACE("Sync with logic...");
 				SyncLogic(bufs[bufIdx]);
 				// start rendering
-				QN_CORE_TRACE("Rendering...");
+				//QN_CORE_TRACE("Rendering...");
 				IRenderer::Render();
 				bufs[bufIdx].unlock();
 				bufIdx ^= 0x01;
