@@ -15,7 +15,7 @@ void EditorLayer::OnAttach()
 {
 	// TODO
 	Quin::IRenderer::CreateCamera(1);
-	m_dat = std::unique_ptr<Quin::dataInfo>(Quin::IRenderer::ResourceAllocate(Quin::BUFFER_TYPE::STATIC, Quin::RESOURCE_TYPE::Mesh, "Assets/skyscraper.obj"));
+	m_dat = std::unique_ptr<Quin::dataInfo>(Quin::IRenderer::ResourceAllocate(Quin::BUFFER_TYPE::STATIC, Quin::RESOURCE_TYPE::Mesh, "Assets/FinalBaseMesh.obj"));
 	float y = 10.0f;
 	float z = 20.0f;
 	m_camera.at = { 0, y, 0 };
@@ -40,8 +40,10 @@ void EditorLayer::OnUpdate(double timeStep)
 	glm::mat4 Identity(1.0);
 	
 	//m_camera.position = { (m_camera.position.x + 0.1*NS_TO_S(timeStep)), 0, 0 };
-
-	//m_camera.at = { sin(0.1 * NS_TO_S(t)) * 5 - 5, cos(0.1 * NS_TO_S(t)) * 5 - 5, 0.0 };
+	float newX = sin(1.5*NS_TO_S(t)) * 20;
+	float newZ = cos(1.5*NS_TO_S(t)) * 20;
+	m_camera.position = { newX, 10, newZ };
+	m_camera.up = { newX, -10, newZ };
 
 	Quin::IRenderer::UpdateCamera(&m_camera);
 

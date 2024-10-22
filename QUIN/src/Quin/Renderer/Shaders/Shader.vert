@@ -6,7 +6,8 @@ layout(set = 0, binding = 0) uniform UBOModel { // Use a struct for the model
 
 layout(set = 0, binding = 1) uniform UBOViewProjection { // Use a struct for viewProjection
     mat4 viewProjection;
-} uboViewProjection;
+    vec3 position;
+} CameraData;
 
 
 layout(location = 0) in vec3 inPosition;
@@ -19,7 +20,7 @@ layout(location = 0) out vec3 fragColor;
 void main() {
     
     // calculate position
-    gl_Position = (uboViewProjection.viewProjection * uboModel.model * vec4(inPosition, 1.0));
+    gl_Position = (CameraData.viewProjection * uboModel.model * vec4(inPosition, 1.0));
 
     // hard code light into shader for now
     vec3 lightPos = vec3(5.0, 20.0, 5.0);
@@ -35,9 +36,8 @@ void main() {
     float diff = max(dot(normal, lightDir), 0.0);
     vec3 diffuse = diff * color;
 
-    vec3 viewPos = vec3(0.0, 10.0, 15.0);
     // Specular lighting
-    vec3 viewDir = normalize(viewPos - fragPosition);
+    vec3 viewDir = normalize(CameraData.position - fragPosition);
     vec3 reflectDir = reflect(-lightDir, normal);
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32.0);  // Shininess factor
     vec3 specular = spec * color;

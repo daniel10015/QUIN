@@ -20,6 +20,12 @@ namespace Quin
 		uint64_t size; // number of bytes
 	};
 
+	struct CameraData
+	{
+		glm::mat4 transform;
+		glm::vec3 position;
+	};
+
 	// data for the buffer and 
 	struct AllocatedBuffer
 	{
@@ -156,7 +162,7 @@ namespace Quin
 
 		static inline std::vector<VkBuffer> m_uniformCameraBuffers;
 		static inline std::vector<VmaAllocation> m_uniformCameraAllocations;
-		static inline std::vector<glm::mat4*> m_uniformCameraBufferMapped; 
+		static inline std::vector<CameraData*> m_uniformCameraBufferMapped;
 		static inline bool m_uniformDataSent = false;
 
 		// depth bufs

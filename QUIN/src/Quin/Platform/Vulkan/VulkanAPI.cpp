@@ -817,7 +817,7 @@ namespace Quin
 	{
 		// combine vertices and normals
 		std::vector<vertex3D> dat; // holds the actual vertex data
-		QN_CORE_ASSERT((data->normals.size() == 0 || data->vertices.size() == data->normals.size()), "invalid amount of normals");
+		QN_CORE_ASSERT((data->normals.size() == 0 || data->vertices.size() >= data->normals.size()), "invalid amount of normals");
 		for (size_t idx = 0; idx < data->vertices.size(); idx++)
 		{
 			dat.emplace_back();
@@ -939,7 +939,7 @@ namespace Quin
 	{
 		// allocate memory for camera
 		// transform
-		VkDeviceSize buffSize = cameraCount * sizeof(glm::mat4);
+		VkDeviceSize buffSize = cameraCount * sizeof(CameraData);
 
 		for (unsigned int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
 		{
@@ -977,7 +977,9 @@ namespace Quin
 	void VulkanAPI::UpdateCamera(Transform* transform)
 	{
 		m_cameras.at(m_currentCamera).CalculateViewProjection(transform);
+		// TODO fix the memcpy
 		memcpy(m_uniformCameraBufferMapped[currentFrame] , &(m_cameras.at(m_currentCamera).m_viewProjectionMatrix), sizeof(glm::mat4));
+		memcpy(m_uniformCameraBufferMapped[currentFrame] + sizeof(glm::mat4), &(transform->position), sizeof(glm::vec3));
 	}
 
 	// difficult case of needing dynamic memory
@@ -1171,7 +1173,7 @@ namespace Quin
 				VkDescriptorBufferInfo buffInfo_2{};
 				buffInfo_2.buffer = m_uniformCameraBuffers.at(m_currentCamera);
 				buffInfo_2.offset = 0;
-				buffInfo_2.range = sizeof(glm::mat4);
+				buffInfo_2.range = sizeof(CameraData);
 
 				VkDescriptorImageInfo imageInfo{};
 				imageInfo.imageView = m_textureImageView;
