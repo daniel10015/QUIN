@@ -16,3 +16,10 @@
 [submodule "QUIN/vendor/VulkanMemoryAllocator"]
 	path = QUIN/vendor/VulkanMemoryAllocator
 	url = https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git
+[submodule "QUIN/vendor/tinygltf"]
+	path = QUIN/vendor/tinygltf
+	url = https://github.com/syoyo/tinygltf.git
+[submodule "QUIN/vendor/imgui"]
+	path = QUIN/vendor/imgui
+	url = https://github.com/daniel10015/imgui.git
+	branch = docking
